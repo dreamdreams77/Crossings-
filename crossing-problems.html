@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CROSSING.EXE</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── RESET & BASE ─────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --black:   #030508;
+  --bg:      #060e18;
+  --bg2:     #0a1525;
+  --bg3:     #0f1e35;
+  --teal:    #00e5ff;
+  --teal2:   #00b4cc;
+  --teal-d:  #006880;
+  --amber:   #ffb300;
+  --amber-d: #996900;
+  --green:   #00ff88;
+  --red:     #ff3355;
+  --white:   #e8f8ff;
+  --mid:     #4a7a98;
+  --dim:     #1e3a50;
+  --pixel:   1px;
+  --scan:    rgba(0,0,0,.35);
+}
+
+html,body{
+  height:100%;
+  background: var(--black);
+  color: var(--white);
+  font-family: 'JetBrains Mono', monospace;
+  overflow-x: hidden;
+  image-rendering: pixelated;
+}
+
+/* ── CRT EFFECTS ─────────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;z-index:9999;
+  pointer-events:none;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--scan) 0px,
+    var(--scan) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity:.4;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;z-index:9998;
+  pointer-events:none;
+  background: radial-gradient(ellipse at center,
+    transparent 60%,
+    rgba(0,0,0,.5) 100%
+  );
+}
+
+/* ── PIXEL BORDER MIXIN ──────────────────────────────── */
+.px-box{
+  border: 2px solid var(--teal-d);
+  position: relative;
+}
+.px-box::before,.px-box::after{
+  content:'';position:absolute;
+  width:6px;height:6px;
+  background:var(--teal-d);
+}
+.px-box::before{top:-1px;left:-1px;}
+.px-box::after{bottom:-1px;right:-1px;}
+
+.px-box-amber{
+  border: 2px solid var(--amber-d);
+}
+.px-box-amber::before,.px-box-amber::after{
+  background:var(--amber-d);
+}
+
+/* ── PIXEL FONT HEADINGS ─────────────────────────────── */
+.pixel{
+  font-family:'Press Start 2P', monospace;
+  line-height:1.6;
+  letter-spacing:.02em;
+}
+
+/* ── BLINK ───────────────────────────────────────────── */
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.blink{animation:blink 1s step-end infinite;}
+
+/* ── GLOW ────────────────────────────────────────────── */
+.glow-teal{text-shadow: 0 0 8px var(--teal),0 0 20px var(--teal2);}
+.glow-amber{text-shadow: 0 0 8px var(--amber),0 0 20px var(--amber-d);}
+.glow-green{text-shadow: 0 0 8px var(--green);}
+
+/* ── SCANLINE FLICKER ────────────────────────────────── */
+@keyframes flicker{
+  0%,95%,100%{opacity:1}
+  96%{opacity:.94}
+  97%{opacity:1}
+  98%{opacity:.96}
+}
+#app{animation:flicker 8s ease-in-out infinite;}
+
+/* ── SCREENS ─────────────────────────────────────────── */
+#app{position:relative;min-height:100vh;}
+.screen{display:none;flex-direction:column;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ── TITLE SCREEN ────────────────────────────────────── */
+#scr-title{
+  align-items:center;justify-content:center;
+  padding:32px 20px;
+  background: linear-gradient(180deg,var(--black) 0%,var(--bg) 60%,var(--black) 100%);
+}
+
+.title-ascii{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(4px,1.4vw,11px);
+  color:var(--teal);
+  line-height:1.2;
+  white-space:pre;
+  text-shadow:0 0 12px var(--teal2);
+  margin-bottom:20px;
+  overflow:hidden;
+}
+
+.title-main{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(10px,3.5vw,22px);
+  color:var(--teal);
+  text-shadow:0 0 12px var(--teal),0 0 30px var(--teal2);
+  text-align:center;
+  line-height:1.8;
+  margin-bottom:8px;
+}
+
+.title-sub-pixel{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(5px,1.5vw,8px);
+  color:var(--amber);
+  text-shadow:0 0 8px var(--amber);
+  text-align:center;
+  margin-bottom:28px;
+  line-height:2;
+}
+
+.title-flavor{
+  font-size:clamp(10px,1.8vw,12px);
+  color:var(--mid);
+  text-align:center;
+  max-width:360px;
+  line-height:1.8;
+  margin-bottom:36px;
+}
+
+.title-prompt{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(6px,1.5vw,9px);
+  color:var(--green);
+  text-shadow:0 0 8px var(--green);
+  cursor:pointer;
+  padding:14px 28px;
+  border:2px solid var(--green);
+  background:transparent;
+  transition:all .1s;
+  position:relative;
+}
+.title-prompt::before{
+  content:'> ';
+  color:var(--green);
+}
+.title-prompt:hover{
+  background:rgba(0,255,136,.1);
+  box-shadow:0 0 20px rgba(0,255,136,.3);
+}
+
+.title-credits{
+  margin-top:32px;
+  font-size:9px;
+  color:var(--dim);
+  text-align:center;
+  line-height:2;
+}
+
+/* ── BOOT SEQUENCE ───────────────────────────────────── */
+#scr-boot{
+  padding:32px 20px;
+  font-size:clamp(9px,1.5vw,11px);
+  color:var(--green);
+  background:var(--black);
+}
+.boot-line{
+  display:block;
+  line-height:1.9;
+  white-space:pre;
+}
+.boot-line.dim{color:var(--dim);}
+.boot-line.amber{color:var(--amber);}
+.boot-line.teal{color:var(--teal);}
+.boot-line.err{color:var(--red);}
+
+/* ── SELECT SCREEN ───────────────────────────────────── */
+#scr-select{
+  padding:0;
+  background:var(--bg);
+}
+
+.term-header{
+  background:var(--bg2);
+  border-bottom:2px solid var(--teal-d);
+  padding:10px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.term-dots{display:flex;gap:6px;}
+.term-dot{
+  width:8px;height:8px;border-radius:0;
+}
+.term-dot.r{background:var(--red);}
+.term-dot.y{background:var(--amber);}
+.term-dot.g{background:var(--green);}
+.term-title{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(5px,1.2vw,8px);
+  color:var(--teal);
+  flex:1;
+  text-align:center;
+}
+.term-info{
+  font-size:9px;color:var(--mid);
+}
+
+.select-body{padding:16px 16px 40px;max-width:600px;margin:0 auto;width:100%;}
+
+.select-prompt{
+  font-size:clamp(9px,1.5vw,11px);
+  color:var(--teal);
+  margin-bottom:4px;
+}
+.select-prompt::before{content:'> ';}
+
+.select-subtitle{
+  font-size:clamp(8px,1.4vw,10px);
+  color:var(--mid);
+  margin-bottom:20px;
+  padding-left:16px;
+  border-left:2px solid var(--dim);
+}
+
+.puzzle-list{display:flex;flex-direction:column;gap:8px;}
+
+.p-row{
+  display:grid;
+  grid-template-columns:40px 1fr auto;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid var(--dim);
+  background:var(--bg2);
+  cursor:pointer;
+  transition:all .1s;
+  position:relative;
+}
+.p-row::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--teal-d);
+  transition:background .1s;
+}
+.p-row:hover{border-color:var(--teal-d);background:var(--bg3);}
+.p-row:hover::before{background:var(--teal);}
+.p-row.done{border-color:var(--amber-d);}
+.p-row.done::before{background:var(--amber);}
+.p-row.locked{opacity:.3;pointer-events:none;}
+
+.p-num{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(5px,1.2vw,7px);
+  color:var(--teal-d);
+  text-align:center;
+}
+.p-name{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(5px,1.2vw,7px);
+  color:var(--white);
+  margin-bottom:4px;
+  line-height:1.6;
+}
+.p-hint{
+  font-size:clamp(8px,1.3vw,10px);
+  color:var(--mid);
+  line-height:1.5;
+}
+.p-status{
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;
+  color:var(--amber);
+  text-shadow:0 0 6px var(--amber);
+}
+
+.select-footer{
+  margin-top:20px;
+  font-size:9px;
+  color:var(--dim);
+  border-top:1px solid var(--dim);
+  padding-top:12px;
+}
+
+/* ── PUZZLE SCREEN ───────────────────────────────────── */
+#scr-puzzle{
+  background:var(--bg);
+}
+
+.puz-header{
+  background:var(--bg2);
+  border-bottom:2px solid var(--teal-d);
+  padding:10px 14px;
+  display:flex;align-items:center;gap:10px;
+}
+.puz-back{
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;color:var(--mid);
+  background:none;border:none;cursor:pointer;
+  padding:4px 8px;
+  border:1px solid var(--dim);
+  transition:all .1s;
+}
+.puz-back:hover{color:var(--teal);border-color:var(--teal-d);}
+.puz-num{
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;color:var(--teal-d);
+  flex-shrink:0;
+}
+.puz-title{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(5px,1.5vw,8px);
+  color:var(--teal);
+  text-shadow:0 0 8px var(--teal2);
+  flex:1;
+  line-height:1.5;
+}
+
+.puz-body{
+  flex:1;padding:16px;
+  max-width:600px;margin:0 auto;width:100%;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+/* Terminal comment block */
+.puz-comment{
+  font-size:clamp(9px,1.5vw,11px);
+  color:var(--mid);
+  line-height:1.8;
+  padding:10px 12px;
+  border-left:3px solid var(--dim);
+  background:var(--bg2);
+}
+.puz-comment::before{
+  content:'// ';
+  color:var(--teal-d);
+}
+
+/* Problem text */
+.puz-problem{
+  font-size:clamp(10px,1.6vw,12px);
+  color:var(--white);
+  line-height:1.9;
+}
+.puz-problem code{
+  color:var(--amber);
+  background:rgba(255,179,0,.08);
+  padding:1px 4px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+/* ── RIVER UI ────────────────────────────────────────── */
+.river-wrap{
+  display:grid;
+  grid-template-columns:1fr 48px 1fr;
+  border:1px solid var(--dim);
+  background:var(--bg2);
+  min-height:140px;
+}
+.r-bank{padding:10px 8px;}
+.r-bank-label{
+  font-family:'Press Start 2P',monospace;
+  font-size:5px;color:var(--teal-d);
+  margin-bottom:8px;letter-spacing:.1em;
+}
+.r-items{display:flex;flex-direction:column;gap:3px;}
+.r-item{
+  font-size:10px;color:var(--mid);
+  padding:2px 0;display:flex;align-items:center;gap:5px;
+}
+.r-item.here{color:var(--white);}
+.r-col{
+  border-left:1px solid var(--teal-d);
+  border-right:1px solid var(--teal-d);
+  background:rgba(0,100,150,.2);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;
+  position:relative;overflow:hidden;
+}
+.r-waves{
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    180deg,transparent,transparent 6px,
+    rgba(0,180,220,.07) 6px,rgba(0,180,220,.07) 7px
+  );
+  animation:wave 2s linear infinite;
+}
+@keyframes wave{from{background-position:0 0}to{background-position:0 14px}}
+.r-boat{
+  position:relative;z-index:1;
+  width:32px;height:16px;
+  border:1px solid var(--amber-d);
+  background:rgba(255,179,0,.06);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;
+  transition:transform .3s;
+}
+.r-boat-label{
+  position:relative;z-index:1;
+  font-family:'Press Start 2P',monospace;
+  font-size:4px;color:var(--amber-d);
+  letter-spacing:.1em;
+}
+
+/* chip row */
+.chip-row{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:10px;
+  background:var(--bg2);
+  border:1px solid var(--dim);
+}
+.chip-label{
+  width:100%;
+  font-family:'Press Start 2P',monospace;
+  font-size:5px;color:var(--teal-d);
+  margin-bottom:4px;
+}
+.chip{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 9px;
+  border:1px solid var(--dim);
+  background:var(--bg3);
+  font-size:10px;color:var(--mid);
+  cursor:pointer;transition:all .1s;
+  user-select:none;
+}
+.chip:hover{border-color:var(--teal-d);color:var(--white);}
+.chip.sel{border-color:var(--teal);color:var(--teal);background:rgba(0,229,255,.06);}
+.chip.aboard{border-color:var(--amber);color:var(--amber);background:rgba(255,179,0,.06);}
+
+/* ── CONTROLS ────────────────────────────────────────── */
+.ctrl-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-px{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(5px,1.2vw,7px);
+  padding:10px 16px;
+  background:var(--bg3);
+  border:2px solid var(--dim);
+  color:var(--mid);
+  cursor:pointer;
+  transition:all .1s;
+  flex:1;
+  text-transform:uppercase;
+}
+.btn-px:hover{border-color:var(--teal-d);color:var(--teal);}
+.btn-px.go{
+  border-color:var(--teal-d);
+  color:var(--teal);
+  background:rgba(0,229,255,.04);
+}
+.btn-px.go:hover{
+  background:rgba(0,229,255,.12);
+  box-shadow:0 0 12px rgba(0,229,255,.2);
+}
+
+/* ── LOG ─────────────────────────────────────────────── */
+.term-log{
+  font-size:clamp(8px,1.3vw,10px);
+  color:var(--dim);
+  line-height:1.9;
+  min-height:18px;
+  padding:0 2px;
+}
+.log-ok{color:var(--green);}
+.log-err{color:var(--red);}
+.log-info{color:var(--mid);}
+
+/* ── CHOICE BUTTONS ──────────────────────────────────── */
+.choices{display:flex;flex-direction:column;gap:7px;}
+.c-btn{
+  text-align:left;
+  background:var(--bg2);
+  border:1px solid var(--dim);
+  padding:11px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(9px,1.5vw,11px);
+  color:var(--mid);
+  line-height:1.6;
+  cursor:pointer;
+  transition:all .1s;
+  position:relative;
+}
+.c-btn::before{
+  content:'[ ]';
+  font-size:9px;
+  color:var(--dim);
+  margin-right:8px;
+  font-family:'JetBrains Mono',monospace;
+}
+.c-btn:hover{border-color:var(--teal-d);color:var(--white);}
+.c-btn:hover::before{content:'[>]';color:var(--teal);}
+.c-btn.ok{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.04);}
+.c-btn.ok::before{content:'[✓]';color:var(--green);}
+.c-btn.no{border-color:var(--red);color:var(--red);background:rgba(255,51,85,.04);}
+.c-btn.no::before{content:'[✗]';color:var(--red);}
+
+/* ── REVEAL SCREEN ───────────────────────────────────── */
+#scr-reveal{
+  background:var(--black);
+  align-items:center;justify-content:center;
+  padding:32px 20px;
+  text-align:center;
+}
+.rev-tag{
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;letter-spacing:.2em;
+  color:var(--teal-d);
+  margin-bottom:24px;
+}
+.rev-name{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(6px,1.8vw,10px);
+  color:var(--amber);
+  text-shadow:0 0 12px var(--amber);
+  margin-bottom:28px;
+  line-height:1.8;
+}
+.rev-divider{
+  display:flex;align-items:center;gap:8px;
+  justify-content:center;margin-bottom:28px;
+}
+.rev-divider span{
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;color:var(--teal-d);
+}
+.rev-line{
+  width:60px;height:1px;
+  background:linear-gradient(to right,transparent,var(--teal-d));
+}
+.rev-line.r{
+  background:linear-gradient(to left,transparent,var(--teal-d));
+}
+.rev-text{
+  font-size:clamp(11px,1.8vw,14px);
+  color:var(--white);
+  line-height:2;
+  max-width:440px;
+  white-space:pre-line;
+  margin-bottom:28px;
+}
+.rev-source{
+  font-size:9px;color:var(--dim);
+  margin-bottom:36px;font-style:italic;
+}
+.rev-cont{
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;
+  color:var(--mid);
+  background:none;border:none;cursor:pointer;
+  padding:12px 20px;
+  border:1px solid var(--dim);
+  transition:all .1s;
+}
+.rev-cont::after{content:' >';}
+.rev-cont:hover{color:var(--teal);border-color:var(--teal-d);}
+
+/* ── END SCREEN ──────────────────────────────────────── */
+#scr-end{
+  align-items:center;justify-content:center;
+  padding:32px 20px;text-align:center;
+  background:var(--black);
+}
+.end-tag{
+  font-family:'Press Start 2P',monospace;font-size:6px;
+  color:var(--green);text-shadow:0 0 8px var(--green);
+  margin-bottom:20px;letter-spacing:.2em;
+}
+.end-px{
+  font-family:'Press Start 2P',monospace;
+  font-size:clamp(8px,2.5vw,14px);
+  color:var(--amber);
+  text-shadow:0 0 16px var(--amber),0 0 40px var(--amber-d);
+  line-height:1.8;margin-bottom:24px;
+}
+.end-body{
+  font-size:clamp(10px,1.6vw,12px);
+  color:var(--mid);
+  line-height:2;max-width:400px;
+  white-space:pre-line;margin-bottom:36px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════════ TITLE ═══════════════ -->
+<div id="scr-title" class="screen active">
+<pre class="title-ascii">
+  ┌──────────────────────────────────────────────────┐
+  │   ██████╗██████╗  ██████╗ ███████╗███████╗       │
+  │  ██╔════╝██╔══██╗██╔═══██╗██╔════╝██╔════╝       │
+  │  ██║     ██████╔╝██║   ██║███████╗███████╗       │
+  │  ██║     ██╔══██╗██║   ██║╚════██║╚════██║       │
+  │  ╚██████╗██║  ██║╚██████╔╝███████║███████║       │
+  │   ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝       │
+  │                                                   │
+  │  ██████╗ ██████╗  ██████╗ ██████╗ ██╗     ███████╗│
+  │  ██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██║     ██╔════╝│
+  │  ██████╔╝██████╔╝██║   ██║██████╔╝██║     █████╗  │
+  │  ██╔═══╝ ██╔══██╗██║   ██║██╔══██╗██║     ██╔══╝  │
+  │  ██║     ██║  ██║╚██████╔╝██████╔╝███████╗███████╗│
+  │  ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝│
+  └──────────────────────────────────────────────────┘</pre>
+
+  <div class="title-main">CROSSING.EXE</div>
+  <div class="title-sub-pixel">v1.0.0 · SEVEN PROBLEMS · ONE RIVER</div>
+  <div class="title-flavor">
+    Logic puzzles for late at night.<br>
+    From the developer of CampedOut (Nintendo Switch).<br>
+    No family. No wellness. No hints.<br>
+    Seven problems that have kept philosophers busy for centuries.
+  </div>
+  <button class="title-prompt pixel" onclick="runBoot()">PRESS START</button>
+  <div class="title-credits">
+    © CROSSING SYSTEMS · ALL RIGHTS RESERVED<br>
+    <span style="color:var(--teal-d)">from the developer of CampedOut [Nintendo Switch]</span><br>
+    <span style="color:var(--dim)">requires: 1x developer brain · recommended: late night</span>
+  </div>
+</div>
+
+<!-- ═══════════════ BOOT ═══════════════ -->
+<div id="scr-boot" class="screen">
+  <div id="boot-lines"></div>
+</div>
+
+<!-- ═══════════════ SELECT ═══════════════ -->
+<div id="scr-select" class="screen">
+  <div class="term-header">
+    <div class="term-dots">
+      <div class="term-dot r"></div>
+      <div class="term-dot y"></div>
+      <div class="term-dot g"></div>
+    </div>
+    <div class="term-title">CROSSING.EXE — PROBLEM SELECT · dev build</div>
+    <div class="term-info" id="sel-score">0/7</div>
+  </div>
+  <div class="select-body">
+    <div class="select-prompt">list_problems --all</div>
+    <div class="select-subtitle">Seven crossing problems. Each has a surface mechanic and a depth below it.</div>
+    <div class="puzzle-list" id="puzzle-list"></div>
+    <div class="select-footer">
+      <span style="color:var(--teal-d)">[TAB]</span> select &nbsp;
+      <span style="color:var(--teal-d)">[ESC]</span> back &nbsp;
+      <span style="color:var(--amber)">✦</span> = solved<br>
+    <span style="color:var(--dim)">// build: crossing_v1.0 · platform: browser · prev: CampedOut [NSW], luca-game.com</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PUZZLE ═══════════════ -->
+<div id="scr-puzzle" class="screen">
+  <div class="puz-header">
+    <button class="puz-back" onclick="showSelect()">[ESC] BACK</button>
+    <span class="puz-num" id="puz-num"></span>
+    <span class="puz-title" id="puz-title"></span>
+  </div>
+  <div class="puz-body" id="puz-body"></div>
+</div>
+
+<!-- ═══════════════ REVEAL ═══════════════ -->
+<div id="scr-reveal" class="screen">
+  <div class="rev-tag">// PUZZLE_SOLVED</div>
+  <div class="rev-name" id="rev-name"></div>
+  <div class="rev-divider">
+    <div class="rev-line"></div>
+    <span>✦</span>
+    <div class="rev-line r"></div>
+  </div>
+  <div class="rev-text" id="rev-text"></div>
+  <div class="rev-source" id="rev-source"></div>
+  <button class="rev-cont" onclick="afterReveal()">CONTINUE</button>
+</div>
+
+<!-- ═══════════════ END ═══════════════ -->
+<div id="scr-end" class="screen">
+  <div class="end-tag">// ALL_PROBLEMS_SOLVED</div>
+  <div class="end-px">ALL SEVEN.<br>CROSSING COMPLETE.</div>
+  <div class="end-body" id="end-body"></div>
+  <button class="title-prompt pixel" onclick="showSelect()" style="font-size:7px">PLAY AGAIN</button>
+</div>
+
+</div><!-- /app -->
+<script>
+"use strict";
+
+/* ═══════════════ PUZZLE DATA ═══════════════════════════ */
+const PUZZLES=[
+{id:0,name:'THE FARMER\'S CROSSING',hint:'wolf · sheep · cabbage · one boat',type:'river',
+ comment:'You sent the Wikipedia link at midnight once. You said it reminded you of something. The farmer can only take one thing at a time. The wolf eats the sheep. The sheep eats the cabbage. Neither the wolf nor the sheep eats the cabbage.\n\nYou need to get all three across.\nThe farmer goes back and forth as needed.',
+ entities:[
+   {id:'wolf',name:'Wolf',em:'🐺',eats:'sheep'},
+   {id:'sheep',name:'Sheep',em:'🐑',eats:'cabbage'},
+   {id:'cab',name:'Cabbage',em:'🥬',eats:null},
+ ],
+ reveal:{name:'THE FARMER\'S CROSSING',
+  text:'The problem is never the wolf or the sheep or the cabbage.\n\nThe problem is always the order you move them in.\n\nMost things that feel impossible are just being attempted in the wrong sequence.',
+  src:'// wolf_goat_problem.js · a classic, and your instinct was right'}},
+
+{id:1,name:'THE BRIDGE AT NIGHT',hint:'four people · one torch · time limit',type:'choice',
+ comment:'Four people need to cross a bridge at night.\nOne torch. Bridge holds two maximum.\nTwo people cross at the speed of the slower one.\n\nA crosses in 1 minute.\nB crosses in 2 minutes.\nC crosses in 5 minutes.\nD crosses in 10 minutes.\n\nWhat is the minimum time to get all four across?',
+ choices:[
+   {t:'17 minutes',ok:true},
+   {t:'19 minutes',ok:false},
+   {t:'15 minutes',ok:false},
+   {t:'21 minutes',ok:false},
+ ],
+ reveal:{name:'THE BRIDGE AT NIGHT',
+  text:'The trick: send the two slowest together.\n\nA+B cross (2min). A returns (1min). C+D cross (10min). B returns (2min). A+B cross (2min).\nTotal: 17 minutes.\n\nSending the fastest person back every time seems efficient.\nIt isn\'t.\n\nSometimes the most efficient path looks, from the outside, like taking the slow route.',
+  src:'// bridge_torch.js · counterintuitive, but demonstrable'}},
+
+{id:2,name:'THE SHIP OF THESEUS',hint:'every plank replaced · is it the same ship?',type:'choice',
+ comment:'The Ship of Theseus sails for decades. Over time, every plank, every rope, every nail is replaced — one at a time as each wears out — until nothing original remains.\n\nA philosopher saves all the old parts and rebuilds the original from them.\n\nWhich is the Ship of Theseus?',
+ choices:[
+   {t:'The maintained one — identity is continuity, not material',ok:false},
+   {t:'The rebuilt original — the materials are what it was',ok:false},
+   {t:'Neither, or both — the question reveals a flaw in the concept of identity itself',ok:true},
+   {t:'The one that still bears the name',ok:false},
+ ],
+ reveal:{name:'THE SHIP OF THESEUS',
+  text:'You once said you remembered wailing as a child at the thought of the infinite black.\n\nThe Ship of Theseus is the same fear from the other direction:\nnot what happens when things end,\nbut whether the thing that continues is still the thing it was.\n\nMost philosophers land here:\nthe question is more interesting than any answer.',
+  src:'// theseus.js · this is the version of the fear you don\'t usually name'}},
+
+{id:3,name:'THE UNEXPECTED HANGING',hint:'the prisoner proved it couldn\'t happen · it happened',type:'choice',
+ comment:'A judge tells a prisoner:\n\n"You will be hanged next week — Monday through Friday.\nYou will not know which day until the morning itself."\n\nThe prisoner reasons backwards from Friday:\nFriday is eliminated — if Thursday passes and I\'m alive, I\'ll know.\nIf Friday is out, Thursday is out for the same reason.\nAnd so on. The prisoner concludes: it cannot happen.\n\nOn Wednesday morning, the hangman arrives.\nThe prisoner is genuinely surprised.\n\nWhat failed?',
+ choices:[
+   {t:'The prisoner\'s logic was correct — the judge lied',ok:false},
+   {t:'The self-referential prediction breaks standard logic — the surprise is genuinely possible',ok:true},
+   {t:'The prisoner should have guessed Wednesday as the most likely day',ok:false},
+   {t:'The judge\'s statement was logically meaningless from the start',ok:false},
+ ],
+ reveal:{name:'THE UNEXPECTED HANGING',
+  text:'The prisoner\'s logic is valid within its own system.\n\nBut the judge\'s statement is self-referential in a way that escapes the system entirely.\n\nSome things cannot be predicted from the inside.\nThe reasoning tool is part of what the problem is about.\n\nThis is also true of certain other questions.\nYou know which ones.',
+  src:'// unexpected_hanging.js · Quine, 1953 · the limit of inward logic'}},
+
+{id:4,name:'THE ISLAND OF BLUE EYES',hint:'everyone already knew · saying it changed everything',type:'choice',
+ comment:'On an island: 100 people with blue eyes.\nEveryone can see each other\'s eye colour but not their own.\nNo mirrors. No one discusses eye colour. They all know the rule:\n\n"Anyone who deduces their own eye colour must leave the island that night."\n\nFor years — nothing happens.\n\nA visitor arrives and says out loud:\n"I see someone with blue eyes."\n\nEveryone already knew this.\nNothing new was stated.\n\nWhat happens?',
+ choices:[
+   {t:'Nothing — everyone already knew someone had blue eyes',ok:false},
+   {t:'All 100 leave on night 100 — the statement created common knowledge',ok:true},
+   {t:'One person leaves immediately — whoever the visitor was looking at',ok:false},
+   {t:'The statement is logically redundant and changes nothing',ok:false},
+ ],
+ reveal:{name:'THE ISLAND OF BLUE EYES',
+  text:'Everyone knew.\nEveryone knew everyone knew.\nBut no one knew that everyone knew that everyone knew.\n\nThe visitor created common knowledge — not new facts, but shared awareness of shared awareness of shared awareness.\n\nSaying a thing out loud can change nothing about the facts\nand everything about what happens next.\n\nYou already know this from experience.',
+  src:'// blue_eyes.js · Terence Tao · the power of public announcement'}},
+
+{id:5,name:'THE SLEEPING BEAUTY PROBLEM',hint:'she wakes up · she doesn\'t know when · what should she believe?',type:'choice',
+ comment:'Sleeping Beauty is put to sleep on Sunday.\nA fair coin is flipped.\n\nHEADS: wakes once Monday. Experiment ends.\nTAILS: wakes Monday. Memory erased. Wakes again Tuesday.\n\nShe wakes up.\nShe doesn\'t know the day or the result.\n\nWhat probability should she assign to HEADS?',
+ choices:[
+   {t:'1/2 — it was a fair coin and she gains no new information upon waking',ok:false},
+   {t:'1/3 — she is in one of three equally likely waking situations',ok:false},
+   {t:'Both 1/2 and 1/3 are defensible — this is genuinely unresolved',ok:true},
+   {t:'2/3 — tails is twice as likely to produce a waking event',ok:false},
+ ],
+ reveal:{name:'THE SLEEPING BEAUTY PROBLEM',
+  text:'Philosophers have argued about this for decades.\nNo consensus.\n\nThe 1/2 camp: the coin was fair, waking adds no new information.\nThe 1/3 camp: from her perspective she\'s more likely in a tails-world.\n\nBoth are using the same facts.\nBoth are using valid frameworks.\nBoth reach different answers.\n\nThis is the correct answer to a surprising number of things:\nNot which side is right.\nBut noticing that the question reveals something about how we frame certainty itself.',
+  src:'// sleeping_beauty.js · Elga 2000 vs Lewis 2001 · still open'}},
+
+{id:6,name:'THE INFINITE HOTEL',hint:'the hotel is full · he checks in a new guest anyway',type:'choice',
+ comment:'Hilbert\'s Grand Hotel has infinitely many rooms — all occupied.\n\nA new guest arrives.\nThe manager moves the guest in room 1 to room 2, the guest in room 2 to room 3, and so on. Room 1 is now free.\n\nThen a coach arrives with infinitely many new guests.\nThe manager accommodates all of them.\n\nThen infinitely many coaches arrive, each with infinitely many guests.\nThe manager accommodates all of them too.\n\nWhat does this demonstrate?',
+ choices:[
+   {t:'That infinity is not a real number and the paradox is a trick of language',ok:false},
+   {t:'That some infinities are larger than others — the hotel can\'t always accommodate',ok:false},
+   {t:'That infinity behaves differently from finite numbers — ∞ + 1 = ∞, and ∞ × ∞ = ∞ (countably)',ok:true},
+   {t:'That actual infinite hotels are physically possible given enough space',ok:false},
+ ],
+ reveal:{name:'THE INFINITE HOTEL',
+  text:'You once said your original view of dying was the infinite black.\nNot darkness. Not sleep. Infinite.\n\nHilbert\'s hotel is infinity taken seriously.\nNot as a large number but as a different kind of thing entirely.\n\nCountable infinity (the integers) can always be reordered to make room.\nUncountable infinity (the real numbers) cannot.\n\nThe black you imagined is probably the second kind.\nIt doesn\'t run out of room.\nIt doesn\'t need to.',
+  src:'// hilbert_hotel.js · Hilbert 1924 · the one that connects to the old fear'}},
+];
+
+/* ═══════════════ STATE ═══════════════════════════════ */
+let solved=new Set();
+let curPuzzle=null;
+let rState=null;
+
+/* ═══════════════ SCREENS ════════════════════════════ */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ═══════════════ BOOT SEQUENCE ══════════════════════ */
+const BOOT_LINES=[
+  {t:'CROSSING.EXE v1.0.0 · INITIALISING...',c:''},
+  {t:'',c:''},
+  {t:'[OK] loading logic_engine.js',c:'dim'},
+  {t:'[OK] loading river_physics.js',c:'dim'},
+  {t:'[OK] loading philosophy_db.json',c:'dim'},
+  {t:'[OK] loading paradox_handler.js',c:'dim'},
+  {t:'[OK] starfield.init()',c:'dim'},
+  {t:'[OK] crt_filter.apply()',c:'dim'},
+  {t:'[OK] nintendo_switch_sdk — detected CampedOut build env',c:'dim'},
+  {t:'[OK] luca_game.soundboard — v2 loaded',c:'dim'},
+  {t:'',c:''},
+  {t:'[WARN] infinity.js — some results may be undefined',c:'amber'},
+  {t:'[WARN] sleeping_beauty.js — consensus not found, loading both answers',c:'amber'},
+  {t:'[WARN] infinite_black.js — this one has no solution yet',c:'amber'},
+  {t:'',c:''},
+  {t:'scanning problem set...',c:''},
+  {t:'  problem_01.js .......... LOADED  [river]',c:'dim'},
+  {t:'  problem_02.js .......... LOADED  [choice]',c:'dim'},
+  {t:'  problem_03.js .......... LOADED  [choice]',c:'dim'},
+  {t:'  problem_04.js .......... LOADED  [choice]',c:'dim'},
+  {t:'  problem_05.js .......... LOADED  [choice]',c:'dim'},
+  {t:'  problem_06.js .......... LOADED  [choice]',c:'dim'},
+  {t:'  problem_07.js .......... LOADED  [choice]',c:'dim'},
+  {t:'',c:''},
+  {t:'ALL SYSTEMS GO.',c:'teal'},
+  {t:'',c:''},
+  {t:'> ready.',c:''},
+];
+
+function runBoot(){
+  show('scr-boot');
+  const wrap=document.getElementById('boot-lines');
+  wrap.innerHTML='';
+  let i=0;
+  function next(){
+    if(i>=BOOT_LINES.length){setTimeout(showSelect,400);return;}
+    const l=BOOT_LINES[i++];
+    const span=document.createElement('span');
+    span.className='boot-line'+(l.c?' '+l.c:'');
+    span.textContent=l.t||'\u00a0';
+    wrap.appendChild(span);
+    wrap.scrollTop=wrap.scrollHeight;
+    setTimeout(next,i<3?120:i<9?60:30);
+  }
+  next();
+}
+
+/* ═══════════════ SELECT ════════════════════════════ */
+function showSelect(){
+  buildList();
+  document.getElementById('sel-score').textContent=solved.size+'/'+PUZZLES.length;
+  show('scr-select');
+}
+
+function buildList(){
+  const el=document.getElementById('puzzle-list');
+  el.innerHTML='';
+  PUZZLES.forEach((p,i)=>{
+    const row=document.createElement('div');
+    row.className='p-row'+(solved.has(p.id)?' done':'');
+    row.innerHTML=`
+      <div class="p-num">${String(i+1).padStart(2,'0')}</div>
+      <div>
+        <div class="p-name">${p.name}</div>
+        <div class="p-hint">${p.hint}</div>
+      </div>
+      ${solved.has(p.id)?'<div class="p-status">✦</div>':'<div class="p-status" style="color:var(--dim)">--</div>'}`;
+    row.onclick=()=>openPuzzle(p);
+    el.appendChild(row);
+  });
+}
+
+/* ═══════════════ OPEN PUZZLE ════════════════════════ */
+function openPuzzle(p){
+  curPuzzle=p;
+  document.getElementById('puz-num').textContent='PROBLEM '+String(PUZZLES.indexOf(p)+1).padStart(2,'0')+' ·';
+  document.getElementById('puz-title').textContent=p.name;
+  const body=document.getElementById('puz-body');
+  body.innerHTML='';
+  if(p.type==='river') renderRiver(p,body);
+  else renderChoice(p,body);
+  show('scr-puzzle');
+}
+
+/* ═══════════════ RIVER PUZZLE ═══════════════════════ */
+function renderRiver(p,body){
+  rState={
+    left:p.entities.map(e=>e.id),
+    right:[],boat:[],side:'left',moves:0
+  };
+  body.innerHTML=`
+    <div class="puz-comment">${p.comment.replace(/\n/g,'<br>')}</div>
+    <div class="chip-row" id="chips">
+      <div class="chip-label">// SELECT ENTITIES TO LOAD INTO BOAT (max 2)</div>
+    </div>
+    <div class="river-wrap">
+      <div class="r-bank">
+        <div class="r-bank-label">START_BANK</div>
+        <div class="r-items" id="b-left"></div>
+      </div>
+      <div class="r-col">
+        <div class="r-waves"></div>
+        <div class="r-boat" id="r-boat">·</div>
+        <div class="r-boat-label">BOAT</div>
+      </div>
+      <div class="r-bank">
+        <div class="r-bank-label">FAR_BANK</div>
+        <div class="r-items" id="b-right"></div>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <button class="btn-px go" onclick="doCross()">CROSS_RIVER()</button>
+      <button class="btn-px" onclick="doReset()">RESET()</button>
+    </div>
+    <div class="term-log" id="tlog"></div>`;
+  updateRiver();
+}
+
+function ge(id){return curPuzzle.entities.find(e=>e.id===id);}
+
+function updateRiver(){
+  const rs=rState,p=curPuzzle;
+  const curBank=rs.side==='left'?rs.left:rs.right;
+
+  // Chips
+  const chips=document.getElementById('chips');
+  const existing=chips.querySelectorAll('.chip');
+  existing.forEach(c=>c.remove());
+  p.entities.forEach(e=>{
+    const onSide=curBank.includes(e.id);
+    const inBoat=rs.boat.includes(e.id);
+    if(!onSide&&!inBoat)return;
+    const ch=document.createElement('div');
+    ch.className='chip'+(inBoat?' aboard':'');
+    ch.innerHTML=`${e.em} ${e.name}`;
+    ch.onclick=()=>toggleChip(e.id);
+    chips.appendChild(ch);
+  });
+  if(!chips.querySelector('.chip')){
+    const empty=document.createElement('div');
+    empty.style.cssText='font-size:9px;color:var(--dim);font-style:italic';
+    empty.textContent='// nothing here to load';
+    chips.appendChild(empty);
+  }
+
+  // Banks
+  const fmt=ids=>ids.length
+    ?ids.map(id=>{const e=ge(id);return`<div class="r-item here">${e.em} ${e.name}</div>`;}).join('')
+    :'<div class="r-item" style="color:var(--dim);font-size:9px;">// empty</div>';
+  document.getElementById('b-left').innerHTML=fmt(rs.left);
+  document.getElementById('b-right').innerHTML=fmt(rs.right);
+
+  // Boat
+  const bv=document.getElementById('r-boat');
+  bv.textContent=rs.boat.length?rs.boat.map(id=>ge(id).em).join(''):'·';
+}
+
+function toggleChip(id){
+  const rs=rState;
+  if(rs.boat.includes(id)){rs.boat=rs.boat.filter(x=>x!==id);}
+  else{
+    if(rs.boat.length>=2){addLog('// ERROR: boat capacity 2 exceeded','err');return;}
+    rs.boat.push(id);
+  }
+  updateRiver();
+}
+
+function doCross(){
+  const rs=rState,p=curPuzzle;
+  const from=rs.side==='left'?rs.left:rs.right;
+  const to  =rs.side==='left'?rs.right:rs.left;
+  rs.boat.forEach(id=>{
+    const i=from.indexOf(id);
+    if(i>=0)from.splice(i,1);
+    to.push(id);
+  });
+  rs.side=rs.side==='left'?'right':'left';
+  rs.moves++;
+  rs.boat=[];
+  const dir=rs.side==='right'?'→ crossed to FAR_BANK':'← returned to START_BANK';
+  addLog(`// move_${rs.moves}: ${dir}`,'info');
+
+  // Conflict check on the bank just left
+  const conflict=checkConflict(from,p);
+  if(conflict){addLog(`// FATAL: ${conflict} — resetting`,'err');setTimeout(doReset,1000);return;}
+
+  if(rs.right.length===p.entities.length){
+    addLog('// SUCCESS: all entities crossed','ok');
+    setTimeout(()=>showReveal(p),700);
+    return;
+  }
+  updateRiver();
+}
+
+function checkConflict(bank,p){
+  if(!p.entities[0].eats)return null;
+  for(const id of bank){
+    const e=p.entities.find(x=>x.id===id);
+    if(e&&e.eats&&bank.includes(e.eats)){
+      const prey=p.entities.find(x=>x.id===e.eats);
+      return`${e.name} consumed ${prey.name}`;
+    }
+  }
+  return null;
+}
+
+function doReset(){
+  rState={left:curPuzzle.entities.map(e=>e.id),right:[],boat:[],side:'left',moves:0};
+  const log=document.getElementById('tlog');
+  if(log)log.innerHTML='';
+  updateRiver();
+}
+
+function addLog(msg,type){
+  const log=document.getElementById('tlog');
+  if(!log)return;
+  const d=document.createElement('div');
+  d.className='log-'+type;
+  d.textContent=msg;
+  log.appendChild(d);
+  log.scrollTop=log.scrollHeight;
+}
+
+/* ═══════════════ CHOICE PUZZLE ══════════════════════ */
+function renderChoice(p,body){
+  body.innerHTML=`
+    <div class="puz-comment">${p.comment.replace(/\n/g,'<br>')}</div>
+    <div class="puz-problem" style="font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.2vw,7px);color:var(--teal-d);margin-bottom:4px;">// SELECT_ANSWER</div>
+    <div class="choices" id="choices"></div>
+    <div class="term-log" id="tlog"></div>`;
+
+  const wrap=document.getElementById('choices');
+  p.choices.forEach((c,i)=>{
+    const btn=document.createElement('button');
+    btn.className='c-btn';
+    btn.textContent=c.t;
+    btn.onclick=()=>pickChoice(i,c.ok,p);
+    wrap.appendChild(btn);
+  });
+}
+
+function pickChoice(idx,ok,p){
+  document.querySelectorAll('.c-btn').forEach((b,i)=>{
+    b.onclick=null;
+    if(i===idx)b.classList.add(ok?'ok':'no');
+    if(!ok&&p.choices[i].ok)setTimeout(()=>b.classList.add('ok'),600);
+  });
+  if(ok){addLog('// CORRECT: solution accepted','ok');setTimeout(()=>showReveal(p),700);}
+  else{addLog('// WRONG: correct answer highlighted','err');setTimeout(()=>showReveal(p),2000);}
+}
+
+/* ═══════════════ REVEAL ════════════════════════════ */
+function showReveal(p){
+  solved.add(p.id);
+  document.getElementById('rev-name').textContent=p.reveal.name;
+  document.getElementById('rev-text').textContent=p.reveal.text;
+  document.getElementById('rev-source').textContent=p.reveal.src;
+  show('scr-reveal');
+}
+
+function afterReveal(){
+  if(solved.size===PUZZLES.length){showEnd();}
+  else{showSelect();}
+}
+
+/* ═══════════════ END ═══════════════════════════════ */
+function showEnd(){
+  document.getElementById('end-body').textContent=
+`The wolf and the sheep are across.
+The bridge is behind you.
+The prisoner was surprised on Wednesday.
+The hotel is still full, and still accepting guests.
+The sleeping beauty remains undecided.
+The infinite black is still there.
+
+But you looked at it directly.
+Every time.
+It couldn't hold its shape.`;
+  show('scr-end');
+}
+
+/* ═══════════════ INIT ══════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{});
+</script>
+</body>
+</html>
