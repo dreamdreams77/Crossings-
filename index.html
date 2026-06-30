@@ -4,203 +4,233 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>CROSSING.EXE</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ── RESET & BASE ─────────────────────────────────────── */
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --black:   #030508;
-  --bg:      #060e18;
-  --bg2:     #0a1525;
-  --bg3:     #0f1e35;
-  --teal:    #00e5ff;
-  --teal2:   #00b4cc;
-  --teal-d:  #006880;
-  --amber:   #ffb300;
-  --amber-d: #996900;
-  --green:   #00ff88;
-  --red:     #ff3355;
-  --white:   #e8f8ff;
-  --mid:     #4a7a98;
-  --dim:     #1e3a50;
-  --pixel:   1px;
-  --scan:    rgba(0,0,0,.35);
+  /* Editor surface */
+  --bg0:     #08090c;
+  --bg:      #0d1117;
+  --bg2:     #11161d;
+  --bg3:     #161b22;
+  --bg-hov:  #1c2128;
+
+  /* Borders */
+  --border:    #21262d;
+  --border-hi: #30363d;
+
+  /* Text */
+  --fg:      #e6edf3;
+  --fg-dim:  #8b949e;
+  --fg-dimmer: #545d68;
+
+  /* Syntax-style accents, used with real meaning */
+  --blue:    #79c0ff;   /* keywords / selection / primary actions */
+  --blue-d:  #1f6feb;
+  --green:   #7ee787;   /* strings / success / solved */
+  --green-d: #2ea043;
+  --purple:  #d2a8ff;   /* special / philosophy reveals */
+  --orange:  #ffa657;   /* warnings / in-progress */
+  --red:     #ff7b72;   /* errors */
+  --pink:    #f778ba;
+
+  --radius: 6px;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 html,body{
   height:100%;
-  background: var(--black);
-  color: var(--white);
-  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg0);
+  color: var(--fg);
+  font-family: var(--mono);
   overflow-x: hidden;
-  image-rendering: pixelated;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── CRT EFFECTS ─────────────────────────────────────── */
+/* ── AMBIENT TEXTURE (subtle, not costume) ───────────── */
 body::before{
   content:'';
   position:fixed;inset:0;z-index:9999;
   pointer-events:none;
   background: repeating-linear-gradient(
     0deg,
-    var(--scan) 0px,
-    var(--scan) 1px,
+    rgba(0,0,0,.06) 0px,
+    rgba(0,0,0,.06) 1px,
     transparent 1px,
-    transparent 3px
+    transparent 2px
   );
-  opacity:.4;
+  opacity:.3;
+  mix-blend-mode: overlay;
 }
 body::after{
   content:'';
   position:fixed;inset:0;z-index:9998;
   pointer-events:none;
-  background: radial-gradient(ellipse at center,
-    transparent 60%,
-    rgba(0,0,0,.5) 100%
+  background: radial-gradient(ellipse at 50% 0%,
+    rgba(121,192,255,.03) 0%,
+    transparent 55%
   );
 }
 
-/* ── PIXEL BORDER MIXIN ──────────────────────────────── */
-.px-box{
-  border: 2px solid var(--teal-d);
-  position: relative;
-}
-.px-box::before,.px-box::after{
-  content:'';position:absolute;
-  width:6px;height:6px;
-  background:var(--teal-d);
-}
-.px-box::before{top:-1px;left:-1px;}
-.px-box::after{bottom:-1px;right:-1px;}
-
-.px-box-amber{
-  border: 2px solid var(--amber-d);
-}
-.px-box-amber::before,.px-box-amber::after{
-  background:var(--amber-d);
-}
-
-/* ── PIXEL FONT HEADINGS ─────────────────────────────── */
-.pixel{
-  font-family:'Press Start 2P', monospace;
-  line-height:1.6;
-  letter-spacing:.02em;
-}
-
-/* ── BLINK ───────────────────────────────────────────── */
-@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
-.blink{animation:blink 1s step-end infinite;}
-
-/* ── GLOW ────────────────────────────────────────────── */
-.glow-teal{text-shadow: 0 0 8px var(--teal),0 0 20px var(--teal2);}
-.glow-amber{text-shadow: 0 0 8px var(--amber),0 0 20px var(--amber-d);}
-.glow-green{text-shadow: 0 0 8px var(--green);}
-
-/* ── SCANLINE FLICKER ────────────────────────────────── */
-@keyframes flicker{
-  0%,95%,100%{opacity:1}
-  96%{opacity:.94}
-  97%{opacity:1}
-  98%{opacity:.96}
-}
-#app{animation:flicker 8s ease-in-out infinite;}
-
-/* ── SCREENS ─────────────────────────────────────────── */
 #app{position:relative;min-height:100vh;}
 .screen{display:none;flex-direction:column;min-height:100vh;}
 .screen.active{display:flex;}
+
+/* ── GUTTER (signature element — code editor line numbers) ── */
+.gutter-row{
+  display:flex;
+  border-bottom:1px solid var(--border);
+}
+.gutter-num{
+  flex-shrink:0;
+  width:36px;
+  text-align:right;
+  padding:0 10px 0 0;
+  color:var(--fg-dimmer);
+  font-size:10px;
+  user-select:none;
+  border-right:1px solid var(--border);
+  background:var(--bg2);
+}
+.gutter-content{
+  flex:1;
+  padding-left:14px;
+}
 
 /* ── TITLE SCREEN ────────────────────────────────────── */
 #scr-title{
   align-items:center;justify-content:center;
   padding:32px 20px;
-  background: linear-gradient(180deg,var(--black) 0%,var(--bg) 60%,var(--black) 100%);
+  background:
+    linear-gradient(180deg, var(--bg0) 0%, var(--bg) 100%);
+  position:relative;
 }
 
-.title-ascii{
-  font-family:'JetBrains Mono',monospace;
-  font-size:clamp(4px,1.4vw,11px);
-  color:var(--teal);
-  line-height:1.2;
-  white-space:pre;
-  text-shadow:0 0 12px var(--teal2);
-  margin-bottom:20px;
+.title-window{
+  width:100%;
+  max-width:460px;
+  background:var(--bg2);
+  border:1px solid var(--border-hi);
+  border-radius:8px;
   overflow:hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.02);
 }
+
+.title-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;
+  background:var(--bg3);
+  border-bottom:1px solid var(--border);
+}
+.title-dot{width:11px;height:11px;border-radius:50%;}
+.title-dot.r{background:#ff5f56;}
+.title-dot.y{background:#ffbd2e;}
+.title-dot.g{background:#27c93f;}
+.title-bar-label{
+  flex:1;text-align:center;
+  font-size:11px;color:var(--fg-dim);
+  letter-spacing:.02em;
+}
+
+.title-body{
+  padding:40px 28px 32px;
+  text-align:center;
+}
+
+.title-eyebrow{
+  font-size:11px;
+  letter-spacing:.18em;
+  color:var(--purple);
+  text-transform:uppercase;
+  margin-bottom:18px;
+}
+.title-eyebrow::before{content:'// ';color:var(--fg-dimmer);}
 
 .title-main{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(10px,3.5vw,22px);
-  color:var(--teal);
-  text-shadow:0 0 12px var(--teal),0 0 30px var(--teal2);
-  text-align:center;
-  line-height:1.8;
-  margin-bottom:8px;
+  font-size:clamp(26px,7vw,38px);
+  font-weight:700;
+  color:var(--fg);
+  letter-spacing:-.01em;
+  line-height:1.1;
+  margin-bottom:6px;
 }
+.title-main .accent{color:var(--blue);}
 
-.title-sub-pixel{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(5px,1.5vw,8px);
-  color:var(--amber);
-  text-shadow:0 0 8px var(--amber);
-  text-align:center;
+.title-version{
+  font-size:11px;
+  color:var(--fg-dimmer);
   margin-bottom:28px;
-  line-height:2;
+  letter-spacing:.04em;
 }
 
 .title-flavor{
-  font-size:clamp(10px,1.8vw,12px);
-  color:var(--mid);
-  text-align:center;
-  max-width:360px;
-  line-height:1.8;
-  margin-bottom:36px;
+  font-size:13px;
+  color:var(--fg-dim);
+  text-align:left;
+  max-width:340px;
+  line-height:1.85;
+  margin:0 auto 32px;
+  padding:14px 16px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-left:3px solid var(--blue-d);
+  border-radius:0 4px 4px 0;
 }
+.title-flavor .com{color:var(--fg-dimmer);}
 
 .title-prompt{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(6px,1.5vw,9px);
-  color:var(--green);
-  text-shadow:0 0 8px var(--green);
+  font-family:var(--mono);
+  font-size:13px;
+  font-weight:500;
+  color:var(--bg0);
+  background:var(--green);
   cursor:pointer;
-  padding:14px 28px;
-  border:2px solid var(--green);
-  background:transparent;
-  transition:all .1s;
-  position:relative;
-}
-.title-prompt::before{
-  content:'> ';
-  color:var(--green);
+  padding:11px 28px;
+  border:none;
+  border-radius:6px;
+  transition:all .15s ease;
+  letter-spacing:.01em;
 }
 .title-prompt:hover{
-  background:rgba(0,255,136,.1);
-  box-shadow:0 0 20px rgba(0,255,136,.3);
+  background:#8fee9a;
+  transform:translateY(-1px);
+  box-shadow:0 4px 14px rgba(126,231,135,.25);
 }
+.title-prompt:active{transform:translateY(0);}
 
 .title-credits{
-  margin-top:32px;
-  font-size:9px;
-  color:var(--dim);
+  margin-top:28px;
+  font-size:10px;
+  color:var(--fg-dimmer);
   text-align:center;
-  line-height:2;
+  line-height:1.8;
 }
 
 /* ── BOOT SEQUENCE ───────────────────────────────────── */
 #scr-boot{
-  padding:32px 20px;
-  font-size:clamp(9px,1.5vw,11px);
-  color:var(--green);
-  background:var(--black);
+  padding:0;
+  background:var(--bg0);
+  align-items:stretch;
+}
+.boot-window{
+  max-width:680px;
+  margin:0 auto;
+  width:100%;
+  padding:40px 24px;
+}
+.boot-lines-wrap{
+  font-size:13px;
+  line-height:1.85;
 }
 .boot-line{
   display:block;
-  line-height:1.9;
-  white-space:pre;
+  white-space:pre-wrap;
+  color:var(--fg-dim);
 }
-.boot-line.dim{color:var(--dim);}
-.boot-line.amber{color:var(--amber);}
-.boot-line.teal{color:var(--teal);}
+.boot-line.dim{color:var(--fg-dimmer);}
+.boot-line.amber{color:var(--orange);}
+.boot-line.teal{color:var(--blue);font-weight:600;}
 .boot-line.err{color:var(--red);}
 
 /* ── SELECT SCREEN ───────────────────────────────────── */
@@ -211,104 +241,109 @@ body::after{
 
 .term-header{
   background:var(--bg2);
-  border-bottom:2px solid var(--teal-d);
-  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  padding:11px 16px;
   display:flex;
   align-items:center;
   gap:12px;
+  position:sticky;
+  top:0;
+  z-index:5;
 }
-.term-dots{display:flex;gap:6px;}
+.term-dots{display:flex;gap:7px;}
 .term-dot{
-  width:8px;height:8px;border-radius:0;
+  width:11px;height:11px;border-radius:50%;
 }
-.term-dot.r{background:var(--red);}
-.term-dot.y{background:var(--amber);}
-.term-dot.g{background:var(--green);}
+.term-dot.r{background:#ff5f56;}
+.term-dot.y{background:#ffbd2e;}
+.term-dot.g{background:#27c93f;}
 .term-title{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(5px,1.2vw,8px);
-  color:var(--teal);
+  font-size:12px;
+  color:var(--fg-dim);
   flex:1;
   text-align:center;
+  letter-spacing:.02em;
 }
 .term-info{
-  font-size:9px;color:var(--mid);
+  font-size:11px;color:var(--fg-dimmer);
+  font-variant-numeric: tabular-nums;
 }
 
-.select-body{padding:16px 16px 40px;max-width:600px;margin:0 auto;width:100%;}
+.select-body{padding:20px 16px 48px;max-width:640px;margin:0 auto;width:100%;}
 
 .select-prompt{
-  font-size:clamp(9px,1.5vw,11px);
-  color:var(--teal);
-  margin-bottom:4px;
+  font-size:13px;
+  color:var(--blue);
+  margin-bottom:6px;
+  font-weight:500;
 }
-.select-prompt::before{content:'> ';}
+.select-prompt::before{content:'$ ';color:var(--fg-dimmer);}
 
 .select-subtitle{
-  font-size:clamp(8px,1.4vw,10px);
-  color:var(--mid);
-  margin-bottom:20px;
-  padding-left:16px;
-  border-left:2px solid var(--dim);
+  font-size:12.5px;
+  color:var(--fg-dim);
+  margin-bottom:24px;
+  padding-left:14px;
+  border-left:2px solid var(--border);
 }
 
-.puzzle-list{display:flex;flex-direction:column;gap:8px;}
+.puzzle-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
 
 .p-row{
   display:grid;
   grid-template-columns:40px 1fr auto;
   align-items:center;
-  gap:10px;
-  padding:10px 12px;
-  border:1px solid var(--dim);
+  gap:12px;
+  padding:13px 14px;
   background:var(--bg2);
   cursor:pointer;
-  transition:all .1s;
+  transition:background .12s;
   position:relative;
+  border-bottom:1px solid var(--border);
 }
-.p-row::before{
-  content:'';
-  position:absolute;left:0;top:0;bottom:0;
-  width:3px;background:var(--teal-d);
-  transition:background .1s;
-}
-.p-row:hover{border-color:var(--teal-d);background:var(--bg3);}
-.p-row:hover::before{background:var(--teal);}
-.p-row.done{border-color:var(--amber-d);}
-.p-row.done::before{background:var(--amber);}
-.p-row.locked{opacity:.3;pointer-events:none;}
+.puzzle-list .p-row:last-child{border-bottom:none;}
+.p-row:hover{background:var(--bg-hov);}
+.p-row.done{background:linear-gradient(90deg,rgba(126,231,135,.06),transparent 40%);}
+.p-row.locked{opacity:.35;pointer-events:none;}
 
 .p-num{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(5px,1.2vw,7px);
-  color:var(--teal-d);
+  font-size:11px;
+  color:var(--fg-dimmer);
   text-align:center;
+  font-variant-numeric: tabular-nums;
 }
 .p-name{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(5px,1.2vw,7px);
-  color:var(--white);
-  margin-bottom:4px;
-  line-height:1.6;
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--fg);
+  margin-bottom:3px;
+  line-height:1.4;
 }
 .p-hint{
-  font-size:clamp(8px,1.3vw,10px);
-  color:var(--mid);
+  font-size:12px;
+  color:var(--fg-dim);
   line-height:1.5;
 }
 .p-status{
-  font-family:'Press Start 2P',monospace;
-  font-size:7px;
-  color:var(--amber);
-  text-shadow:0 0 6px var(--amber);
+  font-size:13px;
+  color:var(--green);
+  flex-shrink:0;
 }
 
 .select-footer{
   margin-top:20px;
-  font-size:9px;
-  color:var(--dim);
-  border-top:1px solid var(--dim);
-  padding-top:12px;
+  font-size:11px;
+  color:var(--fg-dimmer);
+  padding-top:14px;
+}
+.select-footer kbd{
+  display:inline-block;
+  padding:1px 6px;
+  background:var(--bg3);
+  border:1px solid var(--border-hi);
+  border-radius:4px;
+  font-size:10px;
+  color:var(--fg-dim);
 }
 
 /* ── PUZZLE SCREEN ───────────────────────────────────── */
@@ -318,339 +353,360 @@ body::after{
 
 .puz-header{
   background:var(--bg2);
-  border-bottom:2px solid var(--teal-d);
-  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  padding:11px 14px;
   display:flex;align-items:center;gap:10px;
+  position:sticky;top:0;z-index:5;
 }
 .puz-back{
-  font-family:'Press Start 2P',monospace;
-  font-size:6px;color:var(--mid);
-  background:none;border:none;cursor:pointer;
-  padding:4px 8px;
-  border:1px solid var(--dim);
-  transition:all .1s;
+  font-family:var(--mono);
+  font-size:11px;color:var(--fg-dim);
+  background:var(--bg3);border:1px solid var(--border-hi);
+  cursor:pointer;
+  padding:6px 10px;
+  border-radius:5px;
+  transition:all .12s;
 }
-.puz-back:hover{color:var(--teal);border-color:var(--teal-d);}
+.puz-back:hover{color:var(--fg);border-color:var(--blue-d);}
 .puz-num{
-  font-family:'Press Start 2P',monospace;
-  font-size:6px;color:var(--teal-d);
+  font-size:11px;color:var(--fg-dimmer);
   flex-shrink:0;
+  font-variant-numeric: tabular-nums;
 }
 .puz-title{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(5px,1.5vw,8px);
-  color:var(--teal);
-  text-shadow:0 0 8px var(--teal2);
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--fg);
   flex:1;
-  line-height:1.5;
 }
 
 .puz-body{
-  flex:1;padding:16px;
-  max-width:600px;margin:0 auto;width:100%;
-  display:flex;flex-direction:column;gap:14px;
+  flex:1;padding:18px 16px 40px;
+  max-width:640px;margin:0 auto;width:100%;
+  display:flex;flex-direction:column;gap:16px;
 }
 
-/* Terminal comment block */
 .puz-comment{
-  font-size:clamp(9px,1.5vw,11px);
-  color:var(--mid);
-  line-height:1.8;
-  padding:10px 12px;
-  border-left:3px solid var(--dim);
+  font-size:13.5px;
+  color:var(--fg-dim);
+  line-height:1.85;
+  padding:14px 16px;
+  border-radius:6px;
   background:var(--bg2);
+  border:1px solid var(--border);
+  border-left:3px solid var(--purple);
 }
 .puz-comment::before{
   content:'// ';
-  color:var(--teal-d);
+  color:var(--fg-dimmer);
 }
 
-/* Problem text */
 .puz-problem{
-  font-size:clamp(10px,1.6vw,12px);
-  color:var(--white);
+  font-size:14px;
+  color:var(--fg);
   line-height:1.9;
 }
 .puz-problem code{
-  color:var(--amber);
-  background:rgba(255,179,0,.08);
-  padding:1px 4px;
-  font-family:'JetBrains Mono',monospace;
+  color:var(--orange);
+  background:rgba(255,166,87,.1);
+  padding:1px 5px;
+  border-radius:3px;
+  font-family:var(--mono);
 }
 
 /* ── RIVER UI ────────────────────────────────────────── */
 .river-wrap{
   display:grid;
-  grid-template-columns:1fr 48px 1fr;
-  border:1px solid var(--dim);
+  grid-template-columns:1fr 52px 1fr;
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
   background:var(--bg2);
-  min-height:140px;
+  min-height:150px;
 }
-.r-bank{padding:10px 8px;}
+.r-bank{padding:12px 10px;}
 .r-bank-label{
-  font-family:'Press Start 2P',monospace;
-  font-size:5px;color:var(--teal-d);
-  margin-bottom:8px;letter-spacing:.1em;
+  font-size:10px;color:var(--fg-dimmer);
+  margin-bottom:10px;letter-spacing:.1em;
+  text-transform:uppercase;
 }
-.r-items{display:flex;flex-direction:column;gap:3px;}
+.r-items{display:flex;flex-direction:column;gap:5px;}
 .r-item{
-  font-size:10px;color:var(--mid);
-  padding:2px 0;display:flex;align-items:center;gap:5px;
+  font-size:12.5px;color:var(--fg-dim);
+  padding:3px 0;display:flex;align-items:center;gap:6px;
 }
-.r-item.here{color:var(--white);}
+.r-item.here{color:var(--fg);}
 .r-col{
-  border-left:1px solid var(--teal-d);
-  border-right:1px solid var(--teal-d);
-  background:rgba(0,100,150,.2);
+  border-left:1px solid var(--border);
+  border-right:1px solid var(--border);
+  background:linear-gradient(180deg,rgba(31,111,235,.08),rgba(31,111,235,.14));
   display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:6px;
+  align-items:center;justify-content:center;gap:8px;
   position:relative;overflow:hidden;
 }
 .r-waves{
   position:absolute;inset:0;
   background:repeating-linear-gradient(
-    180deg,transparent,transparent 6px,
-    rgba(0,180,220,.07) 6px,rgba(0,180,220,.07) 7px
+    180deg,transparent,transparent 7px,
+    rgba(121,192,255,.06) 7px,rgba(121,192,255,.06) 8px
   );
-  animation:wave 2s linear infinite;
+  animation:wave 2.4s linear infinite;
 }
-@keyframes wave{from{background-position:0 0}to{background-position:0 14px}}
+@keyframes wave{from{background-position:0 0}to{background-position:0 15px}}
 .r-boat{
   position:relative;z-index:1;
-  width:32px;height:16px;
-  border:1px solid var(--amber-d);
-  background:rgba(255,179,0,.06);
+  width:34px;height:17px;
+  border:1px solid var(--orange);
+  border-radius:3px;
+  background:rgba(255,166,87,.08);
   display:flex;align-items:center;justify-content:center;
-  font-size:9px;
+  font-size:11px;
   transition:transform .3s;
 }
 .r-boat-label{
   position:relative;z-index:1;
-  font-family:'Press Start 2P',monospace;
-  font-size:4px;color:var(--amber-d);
-  letter-spacing:.1em;
+  font-size:9px;color:var(--orange);
+  letter-spacing:.1em;opacity:.7;
 }
 
 /* chip row */
 .chip-row{
-  display:flex;flex-wrap:wrap;gap:6px;
-  padding:10px;
+  display:flex;flex-wrap:wrap;gap:7px;
+  padding:12px;
   background:var(--bg2);
-  border:1px solid var(--dim);
+  border:1px solid var(--border);
+  border-radius:8px;
 }
 .chip-label{
   width:100%;
-  font-family:'Press Start 2P',monospace;
-  font-size:5px;color:var(--teal-d);
-  margin-bottom:4px;
+  font-size:10px;color:var(--fg-dimmer);
+  margin-bottom:5px;letter-spacing:.06em;
+  text-transform:uppercase;
 }
 .chip{
-  display:flex;align-items:center;gap:5px;
-  padding:5px 9px;
-  border:1px solid var(--dim);
+  display:flex;align-items:center;gap:6px;
+  padding:6px 11px;
+  border:1px solid var(--border-hi);
+  border-radius:16px;
   background:var(--bg3);
-  font-size:10px;color:var(--mid);
-  cursor:pointer;transition:all .1s;
+  font-size:12.5px;color:var(--fg-dim);
+  cursor:pointer;transition:all .12s;
   user-select:none;
 }
-.chip:hover{border-color:var(--teal-d);color:var(--white);}
-.chip.sel{border-color:var(--teal);color:var(--teal);background:rgba(0,229,255,.06);}
-.chip.aboard{border-color:var(--amber);color:var(--amber);background:rgba(255,179,0,.06);}
+.chip:hover{border-color:var(--blue-d);color:var(--fg);}
+.chip.sel{border-color:var(--blue);color:var(--blue);background:rgba(121,192,255,.08);}
+.chip.aboard{border-color:var(--orange);color:var(--orange);background:rgba(255,166,87,.08);}
 
 /* ── CONTROLS ────────────────────────────────────────── */
 .ctrl-row{display:flex;gap:8px;flex-wrap:wrap;}
 .btn-px{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(5px,1.2vw,7px);
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:500;
   padding:10px 16px;
   background:var(--bg3);
-  border:2px solid var(--dim);
-  color:var(--mid);
+  border:1px solid var(--border-hi);
+  border-radius:6px;
+  color:var(--fg-dim);
   cursor:pointer;
-  transition:all .1s;
+  transition:all .12s;
   flex:1;
-  text-transform:uppercase;
 }
-.btn-px:hover{border-color:var(--teal-d);color:var(--teal);}
+.btn-px:hover{border-color:var(--blue-d);color:var(--fg);background:var(--bg-hov);}
 .btn-px.go{
-  border-color:var(--teal-d);
-  color:var(--teal);
-  background:rgba(0,229,255,.04);
+  border-color:var(--blue-d);
+  color:var(--blue);
+  background:rgba(31,111,235,.1);
 }
 .btn-px.go:hover{
-  background:rgba(0,229,255,.12);
-  box-shadow:0 0 12px rgba(0,229,255,.2);
+  background:rgba(31,111,235,.18);
 }
 
 /* ── LOG ─────────────────────────────────────────────── */
 .term-log{
-  font-size:clamp(8px,1.3vw,10px);
-  color:var(--dim);
+  font-size:12px;
+  color:var(--fg-dimmer);
   line-height:1.9;
   min-height:18px;
   padding:0 2px;
 }
 .log-ok{color:var(--green);}
 .log-err{color:var(--red);}
-.log-info{color:var(--mid);}
+.log-info{color:var(--fg-dim);}
 
 /* ── CHOICE BUTTONS ──────────────────────────────────── */
-.choices{display:flex;flex-direction:column;gap:7px;}
+.choices{display:flex;flex-direction:column;gap:8px;}
 .c-btn{
   text-align:left;
   background:var(--bg2);
-  border:1px solid var(--dim);
-  padding:11px 14px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:clamp(9px,1.5vw,11px);
-  color:var(--mid);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:13px 15px;
+  font-family:var(--mono);
+  font-size:13.5px;
+  color:var(--fg-dim);
   line-height:1.6;
   cursor:pointer;
-  transition:all .1s;
+  transition:all .12s;
   position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
 }
 .c-btn::before{
-  content:'[ ]';
-  font-size:9px;
-  color:var(--dim);
-  margin-right:8px;
-  font-family:'JetBrains Mono',monospace;
+  content:'○';
+  font-size:11px;
+  color:var(--fg-dimmer);
+  flex-shrink:0;
+  margin-top:2px;
 }
-.c-btn:hover{border-color:var(--teal-d);color:var(--white);}
-.c-btn:hover::before{content:'[>]';color:var(--teal);}
-.c-btn.ok{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.04);}
-.c-btn.ok::before{content:'[✓]';color:var(--green);}
-.c-btn.no{border-color:var(--red);color:var(--red);background:rgba(255,51,85,.04);}
-.c-btn.no::before{content:'[✗]';color:var(--red);}
+.c-btn:hover{border-color:var(--blue-d);color:var(--fg);background:var(--bg-hov);}
+.c-btn:hover::before{content:'●';color:var(--blue);}
+.c-btn.ok{border-color:var(--green-d);color:var(--green);background:rgba(126,231,135,.06);}
+.c-btn.ok::before{content:'✓';color:var(--green);}
+.c-btn.no{border-color:var(--red);color:var(--red);background:rgba(255,123,114,.06);}
+.c-btn.no::before{content:'✕';color:var(--red);}
 
 /* ── REVEAL SCREEN ───────────────────────────────────── */
 #scr-reveal{
-  background:var(--black);
+  background:var(--bg0);
   align-items:center;justify-content:center;
   padding:32px 20px;
   text-align:center;
 }
-.rev-tag{
-  font-family:'Press Start 2P',monospace;
-  font-size:6px;letter-spacing:.2em;
-  color:var(--teal-d);
-  margin-bottom:24px;
+.rev-window{
+  max-width:480px;
+  width:100%;
 }
+.rev-tag{
+  font-size:11px;letter-spacing:.1em;
+  color:var(--fg-dimmer);
+  margin-bottom:20px;
+  text-transform:uppercase;
+}
+.rev-tag .check{color:var(--green);}
 .rev-name{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(6px,1.8vw,10px);
-  color:var(--amber);
-  text-shadow:0 0 12px var(--amber);
-  margin-bottom:28px;
-  line-height:1.8;
+  font-size:clamp(15px,3vw,19px);
+  font-weight:700;
+  color:var(--fg);
+  margin-bottom:24px;
+  line-height:1.4;
 }
 .rev-divider{
-  display:flex;align-items:center;gap:8px;
-  justify-content:center;margin-bottom:28px;
+  display:flex;align-items:center;gap:10px;
+  justify-content:center;margin-bottom:24px;
 }
 .rev-divider span{
-  font-family:'Press Start 2P',monospace;
-  font-size:6px;color:var(--teal-d);
+  font-size:11px;color:var(--purple);
 }
 .rev-line{
-  width:60px;height:1px;
-  background:linear-gradient(to right,transparent,var(--teal-d));
+  width:48px;height:1px;
+  background:linear-gradient(to right,transparent,var(--border-hi));
 }
 .rev-line.r{
-  background:linear-gradient(to left,transparent,var(--teal-d));
+  background:linear-gradient(to left,transparent,var(--border-hi));
 }
 .rev-text{
-  font-size:clamp(11px,1.8vw,14px);
-  color:var(--white);
-  line-height:2;
+  font-size:clamp(13px,2vw,15.5px);
+  color:var(--fg-dim);
+  line-height:1.95;
   max-width:440px;
   white-space:pre-line;
   margin-bottom:28px;
+  text-align:left;
+  padding:18px 20px;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:8px;
 }
 .rev-source{
-  font-size:9px;color:var(--dim);
-  margin-bottom:36px;font-style:italic;
+  font-size:11px;color:var(--fg-dimmer);
+  margin-bottom:32px;
+  text-align:left;
+  padding-left:2px;
 }
 .rev-cont{
-  font-family:'Press Start 2P',monospace;
-  font-size:7px;
-  color:var(--mid);
-  background:none;border:none;cursor:pointer;
-  padding:12px 20px;
-  border:1px solid var(--dim);
-  transition:all .1s;
+  font-family:var(--mono);
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--fg);
+  background:var(--bg3);
+  cursor:pointer;
+  padding:11px 22px;
+  border:1px solid var(--border-hi);
+  border-radius:6px;
+  transition:all .12s;
 }
-.rev-cont::after{content:' >';}
-.rev-cont:hover{color:var(--teal);border-color:var(--teal-d);}
+.rev-cont:hover{border-color:var(--blue-d);background:var(--bg-hov);}
 
 /* ── END SCREEN ──────────────────────────────────────── */
 #scr-end{
   align-items:center;justify-content:center;
   padding:32px 20px;text-align:center;
-  background:var(--black);
+  background:var(--bg0);
 }
 .end-tag{
-  font-family:'Press Start 2P',monospace;font-size:6px;
-  color:var(--green);text-shadow:0 0 8px var(--green);
-  margin-bottom:20px;letter-spacing:.2em;
+  font-size:11px;
+  color:var(--green);
+  margin-bottom:20px;letter-spacing:.1em;
+  text-transform:uppercase;
 }
 .end-px{
-  font-family:'Press Start 2P',monospace;
-  font-size:clamp(8px,2.5vw,14px);
-  color:var(--amber);
-  text-shadow:0 0 16px var(--amber),0 0 40px var(--amber-d);
-  line-height:1.8;margin-bottom:24px;
+  font-size:clamp(20px,5vw,30px);
+  font-weight:700;
+  color:var(--fg);
+  line-height:1.3;margin-bottom:24px;
 }
 .end-body{
-  font-size:clamp(10px,1.6vw,12px);
-  color:var(--mid);
+  font-size:clamp(13px,2vw,14.5px);
+  color:var(--fg-dim);
   line-height:2;max-width:400px;
-  white-space:pre-line;margin-bottom:36px;
+  white-space:pre-line;margin-bottom:32px;
+  text-align:left;
+  padding:18px 20px;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:8px;
 }
 </style>
+
 </head>
 <body>
 <div id="app">
 
 <!-- ═══════════════ TITLE ═══════════════ -->
 <div id="scr-title" class="screen active">
-<pre class="title-ascii">
-  ┌──────────────────────────────────────────────────┐
-  │   ██████╗██████╗  ██████╗ ███████╗███████╗       │
-  │  ██╔════╝██╔══██╗██╔═══██╗██╔════╝██╔════╝       │
-  │  ██║     ██████╔╝██║   ██║███████╗███████╗       │
-  │  ██║     ██╔══██╗██║   ██║╚════██║╚════██║       │
-  │  ╚██████╗██║  ██║╚██████╔╝███████║███████║       │
-  │   ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝       │
-  │                                                   │
-  │  ██████╗ ██████╗  ██████╗ ██████╗ ██╗     ███████╗│
-  │  ██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██║     ██╔════╝│
-  │  ██████╔╝██████╔╝██║   ██║██████╔╝██║     █████╗  │
-  │  ██╔═══╝ ██╔══██╗██║   ██║██╔══██╗██║     ██╔══╝  │
-  │  ██║     ██║  ██║╚██████╔╝██████╔╝███████╗███████╗│
-  │  ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝│
-  └──────────────────────────────────────────────────┘</pre>
-
-  <div class="title-main">CROSSING.EXE</div>
-  <div class="title-sub-pixel">v2.0.0 · TEN PROBLEMS · ONE RIVER</div>
-  <div class="title-flavor">
-    Logic puzzles for late at night.<br>
-    From the developer of CampedOut (Nintendo Switch).<br>
-    No family. No wellness. No hints.<br>
-    Ten problems that have kept philosophers busy for centuries —<br>
-    plus a cube to turn, and a fidget mode for the rest.
+<div class="title-window">
+  <div class="title-bar">
+    <div class="title-dot r"></div>
+    <div class="title-dot y"></div>
+    <div class="title-dot g"></div>
+    <div class="title-bar-label">crossing.config.js</div>
   </div>
-  <button class="title-prompt pixel" onclick="runBoot()">PRESS START</button>
-  <div class="title-credits">
-    © CROSSING SYSTEMS · ALL RIGHTS RESERVED<br>
-    <span style="color:var(--teal-d)">from the developer of CampedOut [Nintendo Switch]</span><br>
-    <span style="color:var(--dim)">requires: 1x developer brain · recommended: late night</span>
+  <div class="title-body">
+    <div class="title-eyebrow">module.exports</div>
+    <div class="title-main">Crossing<span class="accent">.</span></div>
+    <div class="title-version">v2.0.0 · 10 problems · 1 river · 1 cube</div>
+    <div class="title-flavor">
+      <span class="com">/**</span><br>
+      <span class="com"> * Logic puzzles for late at night.</span><br>
+      <span class="com"> * No family. No wellness. No hints.</span><br>
+      <span class="com"> * Ten problems philosophers haven't</span><br>
+      <span class="com"> * finished arguing about, a Rubik's</span><br>
+      <span class="com"> * cube, and a fidget mode for the rest.</span><br>
+      <span class="com"> */</span>
+    </div>
+    <button class="title-prompt" onclick="runBoot()">npm start</button>
+    <div class="title-credits">requires: 1× developer brain<br>recommended: late night</div>
   </div>
+</div>
 </div>
 
 <!-- ═══════════════ BOOT ═══════════════ -->
 <div id="scr-boot" class="screen">
-  <div id="boot-lines"></div>
+  <div class="boot-window">
+    <div class="boot-lines-wrap" id="boot-lines"></div>
+  </div>
 </div>
 
 <!-- ═══════════════ SELECT ═══════════════ -->
@@ -661,7 +717,7 @@ body::after{
       <div class="term-dot y"></div>
       <div class="term-dot g"></div>
     </div>
-    <div class="term-title">CROSSING.EXE — PROBLEM SELECT · dev build</div>
+    <div class="term-title">crossing — problem select</div>
     <div class="term-info" id="sel-score">0/10</div>
   </div>
   <div class="select-body">
@@ -669,13 +725,12 @@ body::after{
     <div class="select-subtitle">Ten crossing problems. Each has a surface mechanic and a depth below it.</div>
     <div class="puzzle-list" id="puzzle-list"></div>
     <div class="ctrl-row" style="margin-top:18px">
-      <button class="btn-px" onclick="openFidget()" style="flex:none;padding:10px 20px">⟲ FIDGET.EXE</button>
+      <button class="btn-px" onclick="openFidget()" style="flex:none;padding:10px 20px">⟲ fidget.exe</button>
     </div>
     <div class="select-footer">
-      <span style="color:var(--teal-d)">[TAB]</span> select &nbsp;
-      <span style="color:var(--teal-d)">[ESC]</span> back &nbsp;
-      <span style="color:var(--amber)">✦</span> = solved<br>
-    <span style="color:var(--dim)">// build: crossing_v1.0 · platform: browser · prev: CampedOut [NSW], luca-game.com</span>
+      <span style="color:var(--blue-d)">[TAB]</span> select &nbsp;
+      <span style="color:var(--blue-d)">[ESC]</span> back &nbsp;
+      <span style="color:var(--orange)">✦</span> = solved
     </div>
   </div>
 </div>
@@ -688,13 +743,13 @@ body::after{
       <div class="term-dot y"></div>
       <div class="term-dot g"></div>
     </div>
-    <div class="term-title">FIDGET.EXE — IDLE MODE</div>
+    <div class="term-title">fidget — idle mode</div>
     <button class="puz-back" onclick="showSelect()">[ESC] BACK</button>
   </div>
   <div class="select-body">
     <div class="select-prompt">// no objective. no score. just something for your hands.</div>
     <div id="fidget-tabs" class="ctrl-row" style="flex-wrap:wrap;margin:16px 0"></div>
-    <div id="fidget-stage" style="min-height:320px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--dim);border-radius:3px;padding:24px"></div>
+    <div id="fidget-stage" style="min-height:320px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--fg-dimmer);border-radius:3px;padding:24px"></div>
   </div>
 </div>
 
@@ -724,10 +779,10 @@ body::after{
 
 <!-- ═══════════════ END ═══════════════ -->
 <div id="scr-end" class="screen">
-  <div class="end-tag">// ALL_PROBLEMS_SOLVED</div>
-  <div class="end-px">ALL SEVEN.<br>CROSSING COMPLETE.</div>
+  <div class="end-tag">✓ all_problems_solved</div>
+  <div class="end-px">All ten.<br>Crossing complete.</div>
   <div class="end-body" id="end-body"></div>
-  <button class="title-prompt pixel" onclick="showSelect()" style="font-size:7px">PLAY AGAIN</button>
+  <button class="title-prompt" onclick="showSelect()">npm run replay</button>
 </div>
 
 </div><!-- /app -->
@@ -870,10 +925,10 @@ const BOOT_LINES=[
   {t:'[OK] loading river_physics.js',c:'dim'},
   {t:'[OK] loading philosophy_db.json',c:'dim'},
   {t:'[OK] loading paradox_handler.js',c:'dim'},
+  {t:'[OK] loading rubik_solver.js',c:'dim'},
+  {t:'[OK] loading fidget_module.js',c:'dim'},
   {t:'[OK] starfield.init()',c:'dim'},
   {t:'[OK] crt_filter.apply()',c:'dim'},
-  {t:'[OK] nintendo_switch_sdk — detected CampedOut build env',c:'dim'},
-  {t:'[OK] luca_game.soundboard — v2 loaded',c:'dim'},
   {t:'',c:''},
   {t:'[WARN] infinity.js — some results may be undefined',c:'amber'},
   {t:'[WARN] sleeping_beauty.js — consensus not found, loading both answers',c:'amber'},
@@ -930,7 +985,7 @@ function buildList(){
         <div class="p-name">${p.name}</div>
         <div class="p-hint">${p.hint}</div>
       </div>
-      ${solved.has(p.id)?'<div class="p-status">✦</div>':'<div class="p-status" style="color:var(--dim)">--</div>'}`;
+      ${solved.has(p.id)?'<div class="p-status">✦</div>':'<div class="p-status" style="color:var(--fg-dimmer)">--</div>'}`;
     row.onclick=()=>openPuzzle(p);
     el.appendChild(row);
   });
@@ -1005,7 +1060,7 @@ function updateRiver(){
   });
   if(!chips.querySelector('.chip')){
     const empty=document.createElement('div');
-    empty.style.cssText='font-size:9px;color:var(--dim);font-style:italic';
+    empty.style.cssText='font-size:9px;color:var(--fg-dimmer);font-style:italic';
     empty.textContent='// nothing here to load';
     chips.appendChild(empty);
   }
@@ -1013,7 +1068,7 @@ function updateRiver(){
   // Banks
   const fmt=ids=>ids.length
     ?ids.map(id=>{const e=ge(id);return`<div class="r-item here">${e.em} ${e.name}</div>`;}).join('')
-    :'<div class="r-item" style="color:var(--dim);font-size:9px;">// empty</div>';
+    :'<div class="r-item" style="color:var(--fg-dimmer);font-size:9px;">// empty</div>';
   document.getElementById('b-left').innerHTML=fmt(rs.left);
   document.getElementById('b-right').innerHTML=fmt(rs.right);
 
@@ -1213,7 +1268,7 @@ function rkMove(face,reverse){
 
 function faceGrid(face){
   const colors=rubikState[face];
-  let html='<div style="display:grid;grid-template-columns:repeat(3,16px);grid-template-rows:repeat(3,16px);gap:2px;background:#000;padding:2px;border:1px solid var(--dim)">';
+  let html='<div style="display:grid;grid-template-columns:repeat(3,16px);grid-template-rows:repeat(3,16px);gap:2px;background:#000;padding:2px;border:1px solid var(--fg-dimmer)">';
   colors.forEach(c=>{
     html+=`<div style="background:${RUBIK_COLORS[c]};width:16px;height:16px"></div>`;
   });
@@ -1238,7 +1293,7 @@ function updateRubikNet(){
 function renderChoice(p,body){
   body.innerHTML=`
     <div class="puz-comment">${p.comment.replace(/\n/g,'<br>')}</div>
-    <div class="puz-problem" style="font-family:'Press Start 2P',monospace;font-size:clamp(5px,1.2vw,7px);color:var(--teal-d);margin-bottom:4px;">// SELECT_ANSWER</div>
+    <div class="puz-problem" style="font-size:11px;color:var(--fg-dimmer);margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase;">// select answer</div>
     <div class="choices" id="choices"></div>
     <div class="term-log" id="tlog"></div>`;
 
@@ -1336,12 +1391,12 @@ function buildSpinner(stage){
   sp.style.cssText='width:160px;height:160px;position:relative;transition:transform 4s cubic-bezier(.1,.7,.3,1);cursor:grab';
   sp.innerHTML=`
     <svg viewBox="0 0 160 160" style="width:100%;height:100%">
-      <circle cx="80" cy="80" r="14" fill="#0a1525" stroke="var(--teal)" stroke-width="2"/>
-      <circle cx="80" cy="80" r="5" fill="var(--teal)"/>
+      <circle cx="80" cy="80" r="14" fill="#161b22" stroke="var(--blue)" stroke-width="2"/>
+      <circle cx="80" cy="80" r="5" fill="var(--blue)"/>
       ${[0,120,240].map(a=>`
         <g transform="rotate(${a} 80 80)">
-          <ellipse cx="80" cy="32" rx="22" ry="26" fill="#0f1e35" stroke="var(--teal-d)" stroke-width="1.5"/>
-          <circle cx="80" cy="32" r="9" fill="var(--amber)" opacity=".7"/>
+          <ellipse cx="80" cy="32" rx="22" ry="26" fill="#1c2128" stroke="var(--blue-d)" stroke-width="1.5"/>
+          <circle cx="80" cy="32" r="9" fill="var(--orange)" opacity=".7"/>
         </g>`).join('')}
     </svg>`;
   let rot=0,spinning=false;
@@ -1354,7 +1409,7 @@ function buildSpinner(stage){
   };
   wrap.appendChild(sp);
   const lbl=document.createElement('div');
-  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--dim)';
+  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--fg-dimmer)';
   lbl.textContent='// tap to spin';
   wrap.appendChild(lbl);
   stage.appendChild(wrap);
@@ -1366,12 +1421,12 @@ function buildClickCube(stage){
   wrap.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:10px';
   for(let i=0;i<16;i++){
     const btn=document.createElement('div');
-    btn.style.cssText='width:38px;height:38px;background:var(--bg3);border:1px solid var(--dim);border-radius:3px;cursor:pointer;transition:all .08s;display:flex;align-items:center;justify-content:center';
+    btn.style.cssText='width:38px;height:38px;background:var(--bg3);border:1px solid var(--fg-dimmer);border-radius:3px;cursor:pointer;transition:all .08s;display:flex;align-items:center;justify-content:center';
     let pressed=false;
     btn.onclick=()=>{
       pressed=!pressed;
-      btn.style.background=pressed?'rgba(0,229,255,.18)':'var(--bg3)';
-      btn.style.borderColor=pressed?'var(--teal)':'var(--dim)';
+      btn.style.background=pressed?'rgba(121,192,255,.18)':'var(--bg3)';
+      btn.style.borderColor=pressed?'var(--blue)':'var(--fg-dimmer)';
       btn.style.transform=pressed?'scale(.92) translateY(2px)':'scale(1)';
     };
     wrap.appendChild(btn);
@@ -1383,7 +1438,7 @@ function buildClickCube(stage){
 function buildInfinityCube(stage){
   const wrap=document.createElement('div');
   wrap.style.cssText='display:flex;flex-wrap:wrap;width:200px;gap:2px';
-  const colors=['#00b4cc','#0a1525','#ffb300','#0a1525','#00b4cc','#0a1525','#ffb300','#0a1525'];
+  const colors=['#79c0ff','#161b22','#ffa657','#161b22','#79c0ff','#161b22','#ffa657','#161b22'];
   for(let i=0;i<8;i++){
     const panel=document.createElement('div');
     panel.style.cssText=`width:48px;height:48px;background:${colors[i]};border:1px solid #000;cursor:pointer;transition:all .3s`;
@@ -1404,13 +1459,13 @@ function buildPopit(stage){
   wrap.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:8px';
   for(let i=0;i<25;i++){
     const bub=document.createElement('div');
-    bub.style.cssText='width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(0,229,255,.5),rgba(0,180,200,.15));border:1px solid var(--teal-d);cursor:pointer;transition:all .1s';
+    bub.style.cssText='width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(121,192,255,.5),rgba(31,111,235,.15));border:1px solid var(--blue-d);cursor:pointer;transition:all .1s';
     let popped=false;
     bub.onclick=()=>{
       popped=!popped;
       bub.style.background=popped
         ?'radial-gradient(circle at 35% 35%,rgba(255,179,0,.15),rgba(255,179,0,.05))'
-        :'radial-gradient(circle at 35% 35%,rgba(0,229,255,.5),rgba(0,180,200,.15))';
+        :'radial-gradient(circle at 35% 35%,rgba(121,192,255,.5),rgba(31,111,235,.15))';
       bub.style.transform=popped?'scale(.85)':'scale(1)';
     };
     wrap.appendChild(bub);
@@ -1424,10 +1479,10 @@ function buildSlider(stage){
   wrap.style.cssText='display:flex;flex-direction:column;gap:14px;width:220px';
   for(let row=0;row<4;row++){
     const track=document.createElement('div');
-    track.style.cssText='height:22px;background:var(--bg3);border:1px solid var(--dim);border-radius:11px;position:relative;cursor:pointer';
+    track.style.cssText='height:22px;background:var(--bg3);border:1px solid var(--fg-dimmer);border-radius:11px;position:relative;cursor:pointer';
     const ball=document.createElement('div');
     let pos=Math.random()<.5?2:80;
-    ball.style.cssText=`width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#7adcec,var(--teal));position:absolute;top:1px;left:${pos}%;transition:left .25s ease`;
+    ball.style.cssText=`width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#a5d6ff,var(--blue));position:absolute;top:1px;left:${pos}%;transition:left .25s ease`;
     track.appendChild(ball);
     track.onclick=()=>{
       pos=pos<40?80:2;
@@ -1443,11 +1498,11 @@ function buildSpinRing(stage){
   const wrap=document.createElement('div');
   wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:18px';
   const ring=document.createElement('div');
-  ring.style.cssText='width:140px;height:140px;border-radius:50%;border:10px solid var(--teal-d);position:relative;cursor:grab;transition:transform 3s cubic-bezier(.1,.6,.3,1)';
+  ring.style.cssText='width:140px;height:140px;border-radius:50%;border:10px solid var(--blue-d);position:relative;cursor:grab;transition:transform 3s cubic-bezier(.1,.6,.3,1)';
   for(let i=0;i<8;i++){
     const dot=document.createElement('div');
     const ang=i*45;
-    dot.style.cssText=`position:absolute;width:8px;height:8px;border-radius:50%;background:var(--amber);
+    dot.style.cssText=`position:absolute;width:8px;height:8px;border-radius:50%;background:var(--orange);
       top:50%;left:50%;transform:rotate(${ang}deg) translate(0,-68px) translate(-4px,-4px)`;
     ring.appendChild(dot);
   }
@@ -1461,7 +1516,7 @@ function buildSpinRing(stage){
   };
   wrap.appendChild(ring);
   const lbl=document.createElement('div');
-  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--dim)';
+  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--fg-dimmer)';
   lbl.textContent='// tap to spin';
   wrap.appendChild(lbl);
   stage.appendChild(wrap);
