@@ -3,347 +3,246 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>CROSSING.EXE</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Crossing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── RESET & BASE ─────────────────────────────────────── */
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  /* Editor surface */
-  --bg0:     #08090c;
-  --bg:      #0d1117;
-  --bg2:     #11161d;
-  --bg3:     #161b22;
-  --bg-hov:  #1c2128;
+  --bg:      #0a0a0c;
+  --surface: #131316;
+  --surface2:#1a1a1e;
+  --border:  #232328;
+  --border-hi: #2e2e35;
 
-  /* Borders */
-  --border:    #21262d;
-  --border-hi: #30363d;
+  --fg:      #f2f2f4;
+  --fg-dim:  #9a9aa3;
+  --fg-faint:#5c5c66;
 
-  /* Text */
-  --fg:      #e6edf3;
-  --fg-dim:  #8b949e;
-  --fg-dimmer: #545d68;
+  --accent:  #6e8efb;
+  --accent-hi:#8aa4ff;
+  --success: #4ade80;
+  --warn:    #fbbf24;
+  --danger:  #f87171;
+  --special: #c4a3ff;
 
-  /* Syntax-style accents, used with real meaning */
-  --blue:    #79c0ff;   /* keywords / selection / primary actions */
-  --blue-d:  #1f6feb;
-  --green:   #7ee787;   /* strings / success / solved */
-  --green-d: #2ea043;
-  --purple:  #d2a8ff;   /* special / philosophy reveals */
-  --orange:  #ffa657;   /* warnings / in-progress */
-  --red:     #ff7b72;   /* errors */
-  --pink:    #f778ba;
-
-  --radius: 6px;
+  --radius: 12px;
+  --radius-sm: 8px;
   --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 html,body{
   height:100%;
-  background: var(--bg0);
+  background: var(--bg);
   color: var(--fg);
-  font-family: var(--mono);
+  font-family: var(--sans);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-}
-
-/* ── AMBIENT TEXTURE (subtle, not costume) ───────────── */
-body::before{
-  content:'';
-  position:fixed;inset:0;z-index:9999;
-  pointer-events:none;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0,0,0,.06) 0px,
-    rgba(0,0,0,.06) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  opacity:.3;
-  mix-blend-mode: overlay;
-}
-body::after{
-  content:'';
-  position:fixed;inset:0;z-index:9998;
-  pointer-events:none;
-  background: radial-gradient(ellipse at 50% 0%,
-    rgba(121,192,255,.03) 0%,
-    transparent 55%
-  );
 }
 
 #app{position:relative;min-height:100vh;}
 .screen{display:none;flex-direction:column;min-height:100vh;}
 .screen.active{display:flex;}
 
-/* ── GUTTER (signature element — code editor line numbers) ── */
-.gutter-row{
-  display:flex;
-  border-bottom:1px solid var(--border);
-}
-.gutter-num{
-  flex-shrink:0;
-  width:36px;
-  text-align:right;
-  padding:0 10px 0 0;
-  color:var(--fg-dimmer);
-  font-size:10px;
-  user-select:none;
-  border-right:1px solid var(--border);
-  background:var(--bg2);
-}
-.gutter-content{
-  flex:1;
-  padding-left:14px;
-}
-
 /* ── TITLE SCREEN ────────────────────────────────────── */
 #scr-title{
   align-items:center;justify-content:center;
-  padding:32px 20px;
-  background:
-    linear-gradient(180deg, var(--bg0) 0%, var(--bg) 100%);
-  position:relative;
+  padding:32px 24px;
+  background: radial-gradient(ellipse 800px 500px at 50% -10%, rgba(110,142,251,.12), transparent);
 }
 
-.title-window{
+.title-content{
   width:100%;
-  max-width:460px;
-  background:var(--bg2);
-  border:1px solid var(--border-hi);
-  border-radius:8px;
-  overflow:hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.02);
-}
-
-.title-bar{
-  display:flex;align-items:center;gap:8px;
-  padding:10px 12px;
-  background:var(--bg3);
-  border-bottom:1px solid var(--border);
-}
-.title-dot{width:11px;height:11px;border-radius:50%;}
-.title-dot.r{background:#ff5f56;}
-.title-dot.y{background:#ffbd2e;}
-.title-dot.g{background:#27c93f;}
-.title-bar-label{
-  flex:1;text-align:center;
-  font-size:11px;color:var(--fg-dim);
-  letter-spacing:.02em;
-}
-
-.title-body{
-  padding:40px 28px 32px;
+  max-width:380px;
   text-align:center;
 }
 
-.title-eyebrow{
-  font-size:11px;
-  letter-spacing:.18em;
-  color:var(--purple);
-  text-transform:uppercase;
-  margin-bottom:18px;
+.title-mark{
+  width:48px;height:48px;
+  margin:0 auto 28px;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--special));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
 }
-.title-eyebrow::before{content:'// ';color:var(--fg-dimmer);}
 
 .title-main{
-  font-size:clamp(26px,7vw,38px);
+  font-size:clamp(28px,7vw,38px);
   font-weight:700;
   color:var(--fg);
-  letter-spacing:-.01em;
-  line-height:1.1;
-  margin-bottom:6px;
+  letter-spacing:-.02em;
+  line-height:1.15;
+  margin-bottom:10px;
 }
-.title-main .accent{color:var(--blue);}
 
 .title-version{
-  font-size:11px;
-  color:var(--fg-dimmer);
-  margin-bottom:28px;
-  letter-spacing:.04em;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--fg-faint);
+  margin-bottom:24px;
+  letter-spacing:.02em;
 }
 
 .title-flavor{
-  font-size:13px;
+  font-size:14.5px;
   color:var(--fg-dim);
-  text-align:left;
-  max-width:340px;
-  line-height:1.85;
+  line-height:1.7;
   margin:0 auto 32px;
-  padding:14px 16px;
-  background:var(--bg);
-  border:1px solid var(--border);
-  border-left:3px solid var(--blue-d);
-  border-radius:0 4px 4px 0;
 }
-.title-flavor .com{color:var(--fg-dimmer);}
 
-.title-prompt{
-  font-family:var(--mono);
-  font-size:13px;
-  font-weight:500;
-  color:var(--bg0);
-  background:var(--green);
+.btn-primary{
+  font-family:var(--sans);
+  font-size:14.5px;
+  font-weight:600;
+  color:#0a0a0c;
+  background:var(--fg);
   cursor:pointer;
-  padding:11px 28px;
+  padding:13px 32px;
   border:none;
-  border-radius:6px;
+  border-radius:var(--radius-sm);
   transition:all .15s ease;
-  letter-spacing:.01em;
+  letter-spacing:-.005em;
 }
-.title-prompt:hover{
-  background:#8fee9a;
+.btn-primary:hover{
+  background:var(--accent-hi);
+  color:#0a0a0c;
   transform:translateY(-1px);
-  box-shadow:0 4px 14px rgba(126,231,135,.25);
 }
-.title-prompt:active{transform:translateY(0);}
+.btn-primary:active{transform:translateY(0);}
 
-.title-credits{
+.title-meta{
   margin-top:28px;
-  font-size:10px;
-  color:var(--fg-dimmer);
-  text-align:center;
-  line-height:1.8;
+  font-size:12px;
+  color:var(--fg-faint);
 }
 
-/* ── BOOT SEQUENCE ───────────────────────────────────── */
+/* ── BOOT (brief loading moment, no theatre) ──────────── */
 #scr-boot{
-  padding:0;
-  background:var(--bg0);
-  align-items:stretch;
+  align-items:center;justify-content:center;
+  background:var(--bg);
 }
-.boot-window{
-  max-width:680px;
-  margin:0 auto;
-  width:100%;
-  padding:40px 24px;
+.boot-dots{display:flex;gap:6px;}
+.boot-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent);
+  animation:bdot 1.2s ease-in-out infinite;
 }
-.boot-lines-wrap{
-  font-size:13px;
-  line-height:1.85;
-}
-.boot-line{
-  display:block;
-  white-space:pre-wrap;
-  color:var(--fg-dim);
-}
-.boot-line.dim{color:var(--fg-dimmer);}
-.boot-line.amber{color:var(--orange);}
-.boot-line.teal{color:var(--blue);font-weight:600;}
-.boot-line.err{color:var(--red);}
+.boot-dot:nth-child(2){animation-delay:.15s;}
+.boot-dot:nth-child(3){animation-delay:.3s;}
+@keyframes bdot{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 
 /* ── SELECT SCREEN ───────────────────────────────────── */
 #scr-select{
-  padding:0;
   background:var(--bg);
 }
 
-.term-header{
-  background:var(--bg2);
-  border-bottom:1px solid var(--border);
-  padding:11px 16px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  position:sticky;
-  top:0;
-  z-index:5;
+.app-header{
+  padding:20px 20px 0;
+  max-width:640px;
+  margin:0 auto;
+  width:100%;
 }
-.term-dots{display:flex;gap:7px;}
-.term-dot{
-  width:11px;height:11px;border-radius:50%;
+.app-header-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:4px;
 }
-.term-dot.r{background:#ff5f56;}
-.term-dot.y{background:#ffbd2e;}
-.term-dot.g{background:#27c93f;}
-.term-title{
-  font-size:12px;
-  color:var(--fg-dim);
-  flex:1;
-  text-align:center;
-  letter-spacing:.02em;
+.app-title{
+  font-size:20px;font-weight:700;
+  letter-spacing:-.01em;
 }
-.term-info{
-  font-size:11px;color:var(--fg-dimmer);
-  font-variant-numeric: tabular-nums;
-}
-
-.select-body{padding:20px 16px 48px;max-width:640px;margin:0 auto;width:100%;}
-
-.select-prompt{
-  font-size:13px;
-  color:var(--blue);
-  margin-bottom:6px;
-  font-weight:500;
-}
-.select-prompt::before{content:'$ ';color:var(--fg-dimmer);}
-
-.select-subtitle{
+.app-score{
+  font-family:var(--mono);
   font-size:12.5px;
+  color:var(--fg-faint);
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:4px 10px;
+  border-radius:20px;
+}
+.app-subtitle{
+  font-size:13.5px;
   color:var(--fg-dim);
   margin-bottom:24px;
-  padding-left:14px;
-  border-left:2px solid var(--border);
 }
 
-.puzzle-list{display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.select-body{padding:0 20px 48px;max-width:640px;margin:0 auto;width:100%;}
+
+.puzzle-list{display:flex;flex-direction:column;gap:8px;}
 
 .p-row{
-  display:grid;
-  grid-template-columns:40px 1fr auto;
+  display:flex;
   align-items:center;
-  gap:12px;
-  padding:13px 14px;
-  background:var(--bg2);
+  gap:14px;
+  padding:14px 16px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
   cursor:pointer;
-  transition:background .12s;
-  position:relative;
-  border-bottom:1px solid var(--border);
+  transition:all .15s;
 }
-.puzzle-list .p-row:last-child{border-bottom:none;}
-.p-row:hover{background:var(--bg-hov);}
-.p-row.done{background:linear-gradient(90deg,rgba(126,231,135,.06),transparent 40%);}
+.p-row:hover{background:var(--surface2);border-color:var(--border-hi);}
+.p-row.done{border-color:rgba(74,222,128,.25);background:linear-gradient(135deg,rgba(74,222,128,.04),var(--surface));}
 .p-row.locked{opacity:.35;pointer-events:none;}
 
 .p-num{
-  font-size:11px;
-  color:var(--fg-dimmer);
-  text-align:center;
+  width:28px;height:28px;
+  flex-shrink:0;
+  border-radius:8px;
+  background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);
+  font-size:11.5px;
+  color:var(--fg-faint);
   font-variant-numeric: tabular-nums;
 }
+.p-row.done .p-num{background:rgba(74,222,128,.12);color:var(--success);}
+
+.p-info{flex:1;min-width:0;}
 .p-name{
-  font-size:13.5px;
+  font-size:14.5px;
   font-weight:600;
   color:var(--fg);
-  margin-bottom:3px;
-  line-height:1.4;
+  margin-bottom:2px;
+  letter-spacing:-.005em;
 }
 .p-hint{
-  font-size:12px;
+  font-size:12.5px;
   color:var(--fg-dim);
-  line-height:1.5;
+  line-height:1.4;
 }
 .p-status{
-  font-size:13px;
-  color:var(--green);
   flex-shrink:0;
+  width:20px;height:20px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--success);
+  font-size:13px;
 }
 
-.select-footer{
-  margin-top:20px;
-  font-size:11px;
-  color:var(--fg-dimmer);
-  padding-top:14px;
+.fidget-cta{
+  margin-top:18px;
+  display:flex;
 }
-.select-footer kbd{
-  display:inline-block;
-  padding:1px 6px;
-  background:var(--bg3);
-  border:1px solid var(--border-hi);
-  border-radius:4px;
-  font-size:10px;
+.btn-secondary{
+  font-family:var(--sans);
+  font-size:13.5px;
+  font-weight:500;
   color:var(--fg-dim);
+  background:var(--surface);
+  border:1px solid var(--border);
+  padding:11px 18px;
+  border-radius:var(--radius-sm);
+  cursor:pointer;
+  transition:all .15s;
+  display:flex;align-items:center;gap:8px;
+}
+.btn-secondary:hover{color:var(--fg);border-color:var(--border-hi);background:var(--surface2);}
+
+.select-footer{
+  margin-top:28px;
+  font-size:11.5px;
+  color:var(--fg-faint);
+  padding-top:16px;
+  border-top:1px solid var(--border);
 }
 
 /* ── PUZZLE SCREEN ───────────────────────────────────── */
@@ -352,94 +251,92 @@ body::after{
 }
 
 .puz-header{
-  background:var(--bg2);
-  border-bottom:1px solid var(--border);
-  padding:11px 14px;
-  display:flex;align-items:center;gap:10px;
-  position:sticky;top:0;z-index:5;
+  padding:16px 20px;
+  display:flex;align-items:center;gap:12px;
+  max-width:640px;margin:0 auto;width:100%;
 }
 .puz-back{
-  font-family:var(--mono);
-  font-size:11px;color:var(--fg-dim);
-  background:var(--bg3);border:1px solid var(--border-hi);
+  font-family:var(--sans);
+  font-size:13px;
+  color:var(--fg-dim);
+  background:var(--surface);
+  border:1px solid var(--border);
   cursor:pointer;
-  padding:6px 10px;
-  border-radius:5px;
-  transition:all .12s;
-}
-.puz-back:hover{color:var(--fg);border-color:var(--blue-d);}
-.puz-num{
-  font-size:11px;color:var(--fg-dimmer);
+  padding:7px 12px;
+  border-radius:var(--radius-sm);
+  transition:all .15s;
   flex-shrink:0;
-  font-variant-numeric: tabular-nums;
+}
+.puz-back:hover{color:var(--fg);border-color:var(--border-hi);}
+.puz-num{
+  font-family:var(--mono);
+  font-size:11.5px;color:var(--fg-faint);
+  flex-shrink:0;
 }
 .puz-title{
-  font-size:13.5px;
+  font-size:14.5px;
   font-weight:600;
   color:var(--fg);
   flex:1;
+  letter-spacing:-.005em;
 }
 
 .puz-body{
-  flex:1;padding:18px 16px 40px;
+  flex:1;padding:8px 20px 48px;
   max-width:640px;margin:0 auto;width:100%;
-  display:flex;flex-direction:column;gap:16px;
+  display:flex;flex-direction:column;gap:18px;
 }
 
 .puz-comment{
-  font-size:13.5px;
+  font-size:14px;
   color:var(--fg-dim);
-  line-height:1.85;
-  padding:14px 16px;
-  border-radius:6px;
-  background:var(--bg2);
+  line-height:1.8;
+  padding:16px 18px;
+  border-radius:var(--radius-sm);
+  background:var(--surface);
   border:1px solid var(--border);
-  border-left:3px solid var(--purple);
-}
-.puz-comment::before{
-  content:'// ';
-  color:var(--fg-dimmer);
+  border-left:3px solid var(--special);
 }
 
 .puz-problem{
-  font-size:14px;
+  font-size:14.5px;
   color:var(--fg);
-  line-height:1.9;
+  line-height:1.85;
 }
 .puz-problem code{
-  color:var(--orange);
-  background:rgba(255,166,87,.1);
+  color:var(--warn);
+  background:rgba(251,191,36,.1);
   padding:1px 5px;
-  border-radius:3px;
+  border-radius:4px;
   font-family:var(--mono);
+  font-size:13px;
 }
 
 /* ── RIVER UI ────────────────────────────────────────── */
 .river-wrap{
   display:grid;
-  grid-template-columns:1fr 52px 1fr;
+  grid-template-columns:1fr 56px 1fr;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:var(--radius-sm);
   overflow:hidden;
-  background:var(--bg2);
+  background:var(--surface);
   min-height:150px;
 }
-.r-bank{padding:12px 10px;}
+.r-bank{padding:14px 12px;}
 .r-bank-label{
-  font-size:10px;color:var(--fg-dimmer);
-  margin-bottom:10px;letter-spacing:.1em;
+  font-family:var(--mono);
+  font-size:10px;color:var(--fg-faint);
+  margin-bottom:10px;letter-spacing:.08em;
   text-transform:uppercase;
 }
-.r-items{display:flex;flex-direction:column;gap:5px;}
+.r-items{display:flex;flex-direction:column;gap:6px;}
 .r-item{
-  font-size:12.5px;color:var(--fg-dim);
+  font-size:13px;color:var(--fg-dim);
   padding:3px 0;display:flex;align-items:center;gap:6px;
 }
 .r-item.here{color:var(--fg);}
 .r-col{
-  border-left:1px solid var(--border);
-  border-right:1px solid var(--border);
-  background:linear-gradient(180deg,rgba(31,111,235,.08),rgba(31,111,235,.14));
+  background:linear-gradient(180deg,rgba(110,142,251,.1),rgba(110,142,251,.16));
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:8px;
   position:relative;overflow:hidden;
@@ -448,7 +345,7 @@ body::after{
   position:absolute;inset:0;
   background:repeating-linear-gradient(
     180deg,transparent,transparent 7px,
-    rgba(121,192,255,.06) 7px,rgba(121,192,255,.06) 8px
+    rgba(110,142,251,.08) 7px,rgba(110,142,251,.08) 8px
   );
   animation:wave 2.4s linear infinite;
 }
@@ -456,219 +353,211 @@ body::after{
 .r-boat{
   position:relative;z-index:1;
   width:34px;height:17px;
-  border:1px solid var(--orange);
-  border-radius:3px;
-  background:rgba(255,166,87,.08);
+  border:1px solid var(--warn);
+  border-radius:4px;
+  background:rgba(251,191,36,.1);
   display:flex;align-items:center;justify-content:center;
   font-size:11px;
   transition:transform .3s;
 }
 .r-boat-label{
   position:relative;z-index:1;
-  font-size:9px;color:var(--orange);
-  letter-spacing:.1em;opacity:.7;
+  font-family:var(--mono);
+  font-size:9px;color:var(--warn);
+  letter-spacing:.08em;opacity:.8;
 }
 
 /* chip row */
 .chip-row{
-  display:flex;flex-wrap:wrap;gap:7px;
-  padding:12px;
-  background:var(--bg2);
+  display:flex;flex-wrap:wrap;gap:8px;
+  padding:14px;
+  background:var(--surface);
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:var(--radius-sm);
 }
 .chip-label{
   width:100%;
-  font-size:10px;color:var(--fg-dimmer);
-  margin-bottom:5px;letter-spacing:.06em;
+  font-family:var(--mono);
+  font-size:10px;color:var(--fg-faint);
+  margin-bottom:6px;letter-spacing:.06em;
   text-transform:uppercase;
 }
 .chip{
   display:flex;align-items:center;gap:6px;
-  padding:6px 11px;
+  padding:7px 13px;
   border:1px solid var(--border-hi);
-  border-radius:16px;
-  background:var(--bg3);
-  font-size:12.5px;color:var(--fg-dim);
-  cursor:pointer;transition:all .12s;
+  border-radius:20px;
+  background:var(--surface2);
+  font-size:13px;color:var(--fg-dim);
+  cursor:pointer;transition:all .15s;
   user-select:none;
 }
-.chip:hover{border-color:var(--blue-d);color:var(--fg);}
-.chip.sel{border-color:var(--blue);color:var(--blue);background:rgba(121,192,255,.08);}
-.chip.aboard{border-color:var(--orange);color:var(--orange);background:rgba(255,166,87,.08);}
+.chip:hover{border-color:var(--accent);color:var(--fg);}
+.chip.sel{border-color:var(--accent);color:var(--accent-hi);background:rgba(110,142,251,.1);}
+.chip.aboard{border-color:var(--warn);color:var(--warn);background:rgba(251,191,36,.1);}
 
 /* ── CONTROLS ────────────────────────────────────────── */
-.ctrl-row{display:flex;gap:8px;flex-wrap:wrap;}
+.ctrl-row{display:flex;gap:10px;flex-wrap:wrap;}
 .btn-px{
-  font-family:var(--mono);
-  font-size:12px;
+  font-family:var(--sans);
+  font-size:13.5px;
   font-weight:500;
-  padding:10px 16px;
-  background:var(--bg3);
-  border:1px solid var(--border-hi);
-  border-radius:6px;
+  padding:11px 18px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
   color:var(--fg-dim);
   cursor:pointer;
-  transition:all .12s;
+  transition:all .15s;
   flex:1;
 }
-.btn-px:hover{border-color:var(--blue-d);color:var(--fg);background:var(--bg-hov);}
+.btn-px:hover{border-color:var(--border-hi);color:var(--fg);background:var(--surface2);}
 .btn-px.go{
-  border-color:var(--blue-d);
-  color:var(--blue);
-  background:rgba(31,111,235,.1);
+  border-color:var(--accent);
+  color:#0a0a0c;
+  background:var(--accent);
+  font-weight:600;
 }
 .btn-px.go:hover{
-  background:rgba(31,111,235,.18);
+  background:var(--accent-hi);
 }
 
 /* ── LOG ─────────────────────────────────────────────── */
 .term-log{
+  font-family:var(--mono);
   font-size:12px;
-  color:var(--fg-dimmer);
-  line-height:1.9;
+  color:var(--fg-faint);
+  line-height:1.85;
   min-height:18px;
-  padding:0 2px;
 }
-.log-ok{color:var(--green);}
-.log-err{color:var(--red);}
+.log-ok{color:var(--success);}
+.log-err{color:var(--danger);}
 .log-info{color:var(--fg-dim);}
 
 /* ── CHOICE BUTTONS ──────────────────────────────────── */
 .choices{display:flex;flex-direction:column;gap:8px;}
 .c-btn{
   text-align:left;
-  background:var(--bg2);
+  background:var(--surface);
   border:1px solid var(--border);
-  border-radius:8px;
-  padding:13px 15px;
-  font-family:var(--mono);
-  font-size:13.5px;
+  border-radius:var(--radius-sm);
+  padding:14px 16px;
+  font-family:var(--sans);
+  font-size:14px;
   color:var(--fg-dim);
   line-height:1.6;
   cursor:pointer;
-  transition:all .12s;
-  position:relative;
+  transition:all .15s;
   display:flex;
   align-items:flex-start;
-  gap:10px;
+  gap:12px;
 }
 .c-btn::before{
-  content:'○';
-  font-size:11px;
-  color:var(--fg-dimmer);
+  content:'';
+  width:8px;height:8px;
+  border-radius:50%;
+  border:1.5px solid var(--fg-faint);
   flex-shrink:0;
-  margin-top:2px;
+  margin-top:5px;
 }
-.c-btn:hover{border-color:var(--blue-d);color:var(--fg);background:var(--bg-hov);}
-.c-btn:hover::before{content:'●';color:var(--blue);}
-.c-btn.ok{border-color:var(--green-d);color:var(--green);background:rgba(126,231,135,.06);}
-.c-btn.ok::before{content:'✓';color:var(--green);}
-.c-btn.no{border-color:var(--red);color:var(--red);background:rgba(255,123,114,.06);}
-.c-btn.no::before{content:'✕';color:var(--red);}
+.c-btn:hover{border-color:var(--border-hi);color:var(--fg);background:var(--surface2);}
+.c-btn:hover::before{border-color:var(--accent);}
+.c-btn.ok{border-color:rgba(74,222,128,.4);color:var(--success);background:rgba(74,222,128,.06);}
+.c-btn.ok::before{background:var(--success);border-color:var(--success);}
+.c-btn.no{border-color:rgba(248,113,113,.4);color:var(--danger);background:rgba(248,113,113,.06);}
+.c-btn.no::before{background:var(--danger);border-color:var(--danger);}
 
 /* ── REVEAL SCREEN ───────────────────────────────────── */
 #scr-reveal{
-  background:var(--bg0);
+  background:var(--bg);
   align-items:center;justify-content:center;
-  padding:32px 20px;
-  text-align:center;
+  padding:32px 24px;
 }
 .rev-window{
-  max-width:480px;
+  max-width:440px;
   width:100%;
 }
 .rev-tag{
-  font-size:11px;letter-spacing:.1em;
-  color:var(--fg-dimmer);
+  display:flex;align-items:center;gap:8px;
+  font-size:12.5px;
+  color:var(--success);
   margin-bottom:20px;
-  text-transform:uppercase;
+  font-weight:500;
 }
-.rev-tag .check{color:var(--green);}
 .rev-name{
-  font-size:clamp(15px,3vw,19px);
+  font-size:clamp(17px,3vw,21px);
   font-weight:700;
   color:var(--fg);
-  margin-bottom:24px;
-  line-height:1.4;
-}
-.rev-divider{
-  display:flex;align-items:center;gap:10px;
-  justify-content:center;margin-bottom:24px;
-}
-.rev-divider span{
-  font-size:11px;color:var(--purple);
-}
-.rev-line{
-  width:48px;height:1px;
-  background:linear-gradient(to right,transparent,var(--border-hi));
-}
-.rev-line.r{
-  background:linear-gradient(to left,transparent,var(--border-hi));
+  margin-bottom:20px;
+  line-height:1.35;
+  letter-spacing:-.01em;
 }
 .rev-text{
-  font-size:clamp(13px,2vw,15.5px);
+  font-size:14.5px;
   color:var(--fg-dim);
-  line-height:1.95;
-  max-width:440px;
+  line-height:1.85;
   white-space:pre-line;
-  margin-bottom:28px;
-  text-align:left;
+  margin-bottom:24px;
   padding:18px 20px;
-  background:var(--bg2);
+  background:var(--surface);
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:var(--radius-sm);
 }
 .rev-source{
-  font-size:11px;color:var(--fg-dimmer);
-  margin-bottom:32px;
-  text-align:left;
-  padding-left:2px;
+  font-family:var(--mono);
+  font-size:11.5px;color:var(--fg-faint);
+  margin-bottom:28px;
 }
 .rev-cont{
-  font-family:var(--mono);
-  font-size:12.5px;
-  font-weight:500;
-  color:var(--fg);
-  background:var(--bg3);
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:600;
+  color:#0a0a0c;
+  background:var(--fg);
   cursor:pointer;
-  padding:11px 22px;
-  border:1px solid var(--border-hi);
-  border-radius:6px;
-  transition:all .12s;
+  padding:12px 24px;
+  border:none;
+  border-radius:var(--radius-sm);
+  transition:all .15s;
+  width:100%;
 }
-.rev-cont:hover{border-color:var(--blue-d);background:var(--bg-hov);}
+.rev-cont:hover{background:var(--accent-hi);}
 
 /* ── END SCREEN ──────────────────────────────────────── */
 #scr-end{
   align-items:center;justify-content:center;
-  padding:32px 20px;text-align:center;
-  background:var(--bg0);
+  padding:32px 24px;
+  background:var(--bg);
 }
 .end-tag{
-  font-size:11px;
-  color:var(--green);
-  margin-bottom:20px;letter-spacing:.1em;
-  text-transform:uppercase;
+  font-size:13px;
+  color:var(--success);
+  margin-bottom:20px;font-weight:500;
 }
 .end-px{
-  font-size:clamp(20px,5vw,30px);
+  font-size:clamp(24px,5vw,32px);
   font-weight:700;
   color:var(--fg);
   line-height:1.3;margin-bottom:24px;
+  letter-spacing:-.01em;
+  text-align:center;
 }
 .end-body{
-  font-size:clamp(13px,2vw,14.5px);
+  font-size:14.5px;
   color:var(--fg-dim);
   line-height:2;max-width:400px;
   white-space:pre-line;margin-bottom:32px;
-  text-align:left;
-  padding:18px 20px;
-  background:var(--bg2);
+  padding:20px 22px;
+  background:var(--surface);
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:var(--radius-sm);
+  text-align:center;
 }
+
+/* ── FIDGET SCREEN ───────────────────────────────────── */
+#scr-fidget{background:var(--bg);}
 </style>
+
 
 </head>
 <body>
@@ -676,87 +565,61 @@ body::after{
 
 <!-- ═══════════════ TITLE ═══════════════ -->
 <div id="scr-title" class="screen active">
-<div class="title-window">
-  <div class="title-bar">
-    <div class="title-dot r"></div>
-    <div class="title-dot y"></div>
-    <div class="title-dot g"></div>
-    <div class="title-bar-label">crossing.config.js</div>
+  <div class="title-content">
+    <div class="title-mark">🌊</div>
+    <div class="title-main">Crossing</div>
+    <div class="title-version">10 problems · 1 river · 1 cube</div>
+    <p class="title-flavor">Logic puzzles for late at night. No family, no wellness, no hints — just problems philosophers still argue about, a Rubik's cube, and a fidget mode for the rest.</p>
+    <button class="btn-primary" onclick="runBoot()">Begin</button>
+    <div class="title-meta">best with a quiet room and no deadline</div>
   </div>
-  <div class="title-body">
-    <div class="title-eyebrow">module.exports</div>
-    <div class="title-main">Crossing<span class="accent">.</span></div>
-    <div class="title-version">v2.0.0 · 10 problems · 1 river · 1 cube</div>
-    <div class="title-flavor">
-      <span class="com">/**</span><br>
-      <span class="com"> * Logic puzzles for late at night.</span><br>
-      <span class="com"> * No family. No wellness. No hints.</span><br>
-      <span class="com"> * Ten problems philosophers haven't</span><br>
-      <span class="com"> * finished arguing about, a Rubik's</span><br>
-      <span class="com"> * cube, and a fidget mode for the rest.</span><br>
-      <span class="com"> */</span>
-    </div>
-    <button class="title-prompt" onclick="runBoot()">npm start</button>
-    <div class="title-credits">requires: 1× developer brain<br>recommended: late night</div>
-  </div>
-</div>
 </div>
 
 <!-- ═══════════════ BOOT ═══════════════ -->
 <div id="scr-boot" class="screen">
-  <div class="boot-window">
-    <div class="boot-lines-wrap" id="boot-lines"></div>
+  <div class="boot-dots">
+    <div class="boot-dot"></div>
+    <div class="boot-dot"></div>
+    <div class="boot-dot"></div>
   </div>
 </div>
 
 <!-- ═══════════════ SELECT ═══════════════ -->
 <div id="scr-select" class="screen">
-  <div class="term-header">
-    <div class="term-dots">
-      <div class="term-dot r"></div>
-      <div class="term-dot y"></div>
-      <div class="term-dot g"></div>
+  <div class="app-header">
+    <div class="app-header-row">
+      <div class="app-title">Crossing</div>
+      <div class="app-score" id="sel-score">0/10</div>
     </div>
-    <div class="term-title">crossing — problem select</div>
-    <div class="term-info" id="sel-score">0/10</div>
+    <div class="app-subtitle">Each problem has a surface mechanic and a depth below it.</div>
   </div>
   <div class="select-body">
-    <div class="select-prompt">list_problems --all</div>
-    <div class="select-subtitle">Ten crossing problems. Each has a surface mechanic and a depth below it.</div>
     <div class="puzzle-list" id="puzzle-list"></div>
-    <div class="ctrl-row" style="margin-top:18px">
-      <button class="btn-px" onclick="openFidget()" style="flex:none;padding:10px 20px">⟲ fidget.exe</button>
+    <div class="fidget-cta">
+      <button class="btn-secondary" onclick="openFidget()">⟲ Fidget mode — no objective, just something for your hands</button>
     </div>
     <div class="select-footer">
-      <span style="color:var(--blue-d)">[TAB]</span> select &nbsp;
-      <span style="color:var(--blue-d)">[ESC]</span> back &nbsp;
-      <span style="color:var(--orange)">✦</span> = solved
+      ✦ marks a solved problem
     </div>
   </div>
 </div>
 
 <!-- ═══════════════ FIDGET ═══════════════ -->
 <div id="scr-fidget" class="screen">
-  <div class="term-header">
-    <div class="term-dots">
-      <div class="term-dot r"></div>
-      <div class="term-dot y"></div>
-      <div class="term-dot g"></div>
-    </div>
-    <div class="term-title">fidget — idle mode</div>
-    <button class="puz-back" onclick="showSelect()">[ESC] BACK</button>
+  <div class="puz-header">
+    <button class="puz-back" onclick="showSelect()">← Back</button>
+    <div class="puz-title">Fidget mode</div>
   </div>
   <div class="select-body">
-    <div class="select-prompt">// no objective. no score. just something for your hands.</div>
-    <div id="fidget-tabs" class="ctrl-row" style="flex-wrap:wrap;margin:16px 0"></div>
-    <div id="fidget-stage" style="min-height:320px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--fg-dimmer);border-radius:3px;padding:24px"></div>
+    <div id="fidget-tabs" class="ctrl-row" style="flex-wrap:wrap;margin-bottom:18px"></div>
+    <div id="fidget-stage" style="min-height:320px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:24px"></div>
   </div>
 </div>
 
 <!-- ═══════════════ PUZZLE ═══════════════ -->
 <div id="scr-puzzle" class="screen">
   <div class="puz-header">
-    <button class="puz-back" onclick="showSelect()">[ESC] BACK</button>
+    <button class="puz-back" onclick="showSelect()">← Back</button>
     <span class="puz-num" id="puz-num"></span>
     <span class="puz-title" id="puz-title"></span>
   </div>
@@ -765,29 +628,27 @@ body::after{
 
 <!-- ═══════════════ REVEAL ═══════════════ -->
 <div id="scr-reveal" class="screen">
-  <div class="rev-tag">// PUZZLE_SOLVED</div>
-  <div class="rev-name" id="rev-name"></div>
-  <div class="rev-divider">
-    <div class="rev-line"></div>
-    <span>✦</span>
-    <div class="rev-line r"></div>
+  <div class="rev-window">
+    <div class="rev-tag">✓ &nbsp;Solved</div>
+    <div class="rev-name" id="rev-name"></div>
+    <div class="rev-text" id="rev-text"></div>
+    <div class="rev-source" id="rev-source"></div>
+    <button class="rev-cont" onclick="afterReveal()">Continue</button>
   </div>
-  <div class="rev-text" id="rev-text"></div>
-  <div class="rev-source" id="rev-source"></div>
-  <button class="rev-cont" onclick="afterReveal()">CONTINUE</button>
 </div>
 
 <!-- ═══════════════ END ═══════════════ -->
 <div id="scr-end" class="screen">
-  <div class="end-tag">✓ all_problems_solved</div>
+  <div class="end-tag">✓ All problems solved</div>
   <div class="end-px">All ten.<br>Crossing complete.</div>
   <div class="end-body" id="end-body"></div>
-  <button class="title-prompt" onclick="showSelect()">npm run replay</button>
+  <button class="btn-primary" onclick="showSelect()">Play again</button>
 </div>
 
 </div><!-- /app -->
 <script>
 "use strict";
+
 
 /* ═══════════════ PUZZLE DATA ═══════════════════════════ */
 const PUZZLES=[
@@ -917,53 +778,10 @@ function show(id){
   window.scrollTo(0,0);
 }
 
-/* ═══════════════ BOOT SEQUENCE ══════════════════════ */
-const BOOT_LINES=[
-  {t:'CROSSING.EXE v1.0.0 · INITIALISING...',c:''},
-  {t:'',c:''},
-  {t:'[OK] loading logic_engine.js',c:'dim'},
-  {t:'[OK] loading river_physics.js',c:'dim'},
-  {t:'[OK] loading philosophy_db.json',c:'dim'},
-  {t:'[OK] loading paradox_handler.js',c:'dim'},
-  {t:'[OK] loading rubik_solver.js',c:'dim'},
-  {t:'[OK] loading fidget_module.js',c:'dim'},
-  {t:'[OK] starfield.init()',c:'dim'},
-  {t:'[OK] crt_filter.apply()',c:'dim'},
-  {t:'',c:''},
-  {t:'[WARN] infinity.js — some results may be undefined',c:'amber'},
-  {t:'[WARN] sleeping_beauty.js — consensus not found, loading both answers',c:'amber'},
-  {t:'[WARN] infinite_black.js — this one has no solution yet',c:'amber'},
-  {t:'',c:''},
-  {t:'scanning problem set...',c:''},
-  {t:'  problem_01.js .......... LOADED  [river]',c:'dim'},
-  {t:'  problem_02.js .......... LOADED  [choice]',c:'dim'},
-  {t:'  problem_03.js .......... LOADED  [choice]',c:'dim'},
-  {t:'  problem_04.js .......... LOADED  [choice]',c:'dim'},
-  {t:'  problem_05.js .......... LOADED  [choice]',c:'dim'},
-  {t:'  problem_06.js .......... LOADED  [choice]',c:'dim'},
-  {t:'  problem_07.js .......... LOADED  [choice]',c:'dim'},
-  {t:'',c:''},
-  {t:'ALL SYSTEMS GO.',c:'teal'},
-  {t:'',c:''},
-  {t:'> ready.',c:''},
-];
-
+/* ═══════════════ TRANSITION ══════════════════════════ */
 function runBoot(){
   show('scr-boot');
-  const wrap=document.getElementById('boot-lines');
-  wrap.innerHTML='';
-  let i=0;
-  function next(){
-    if(i>=BOOT_LINES.length){setTimeout(showSelect,400);return;}
-    const l=BOOT_LINES[i++];
-    const span=document.createElement('span');
-    span.className='boot-line'+(l.c?' '+l.c:'');
-    span.textContent=l.t||'\u00a0';
-    wrap.appendChild(span);
-    wrap.scrollTop=wrap.scrollHeight;
-    setTimeout(next,i<3?120:i<9?60:30);
-  }
-  next();
+  setTimeout(showSelect, 500);
 }
 
 /* ═══════════════ SELECT ════════════════════════════ */
@@ -981,11 +799,11 @@ function buildList(){
     row.className='p-row'+(solved.has(p.id)?' done':'');
     row.innerHTML=`
       <div class="p-num">${String(i+1).padStart(2,'0')}</div>
-      <div>
+      <div class="p-info">
         <div class="p-name">${p.name}</div>
         <div class="p-hint">${p.hint}</div>
       </div>
-      ${solved.has(p.id)?'<div class="p-status">✦</div>':'<div class="p-status" style="color:var(--fg-dimmer)">--</div>'}`;
+      ${solved.has(p.id)?'<div class="p-status">✦</div>':''}`;
     row.onclick=()=>openPuzzle(p);
     el.appendChild(row);
   });
@@ -1013,11 +831,11 @@ function renderRiver(p,body){
   body.innerHTML=`
     <div class="puz-comment">${p.comment.replace(/\n/g,'<br>')}</div>
     <div class="chip-row" id="chips">
-      <div class="chip-label">// SELECT ENTITIES TO LOAD INTO BOAT (max 2)</div>
+      <div class="chip-label">Tap to load into the boat (max 2)</div>
     </div>
     <div class="river-wrap">
       <div class="r-bank">
-        <div class="r-bank-label">START_BANK</div>
+        <div class="r-bank-label">Start</div>
         <div class="r-items" id="b-left"></div>
       </div>
       <div class="r-col">
@@ -1026,13 +844,13 @@ function renderRiver(p,body){
         <div class="r-boat-label">BOAT</div>
       </div>
       <div class="r-bank">
-        <div class="r-bank-label">FAR_BANK</div>
+        <div class="r-bank-label">Far side</div>
         <div class="r-items" id="b-right"></div>
       </div>
     </div>
     <div class="ctrl-row">
-      <button class="btn-px go" onclick="doCross()">CROSS_RIVER()</button>
-      <button class="btn-px" onclick="doReset()">RESET()</button>
+      <button class="btn-px go" onclick="doCross()">Cross the river</button>
+      <button class="btn-px" onclick="doReset()">Reset</button>
     </div>
     <div class="term-log" id="tlog"></div>`;
   updateRiver();
@@ -1060,15 +878,15 @@ function updateRiver(){
   });
   if(!chips.querySelector('.chip')){
     const empty=document.createElement('div');
-    empty.style.cssText='font-size:9px;color:var(--fg-dimmer);font-style:italic';
-    empty.textContent='// nothing here to load';
+    empty.style.cssText='font-size:9px;color:var(--fg-faint);font-style:italic';
+    empty.textContent='Nothing here yet.';
     chips.appendChild(empty);
   }
 
   // Banks
   const fmt=ids=>ids.length
     ?ids.map(id=>{const e=ge(id);return`<div class="r-item here">${e.em} ${e.name}</div>`;}).join('')
-    :'<div class="r-item" style="color:var(--fg-dimmer);font-size:9px;">// empty</div>';
+    :'<div class="r-item" style="color:var(--fg-faint);font-size:9px;">empty</div>';
   document.getElementById('b-left').innerHTML=fmt(rs.left);
   document.getElementById('b-right').innerHTML=fmt(rs.right);
 
@@ -1081,7 +899,7 @@ function toggleChip(id){
   const rs=rState;
   if(rs.boat.includes(id)){rs.boat=rs.boat.filter(x=>x!==id);}
   else{
-    if(rs.boat.length>=2){addLog('// ERROR: boat capacity 2 exceeded','err');return;}
+    if(rs.boat.length>=2){addLog('The boat only holds two.','err');return;}
     rs.boat.push(id);
   }
   updateRiver();
@@ -1099,15 +917,15 @@ function doCross(){
   rs.side=rs.side==='left'?'right':'left';
   rs.moves++;
   rs.boat=[];
-  const dir=rs.side==='right'?'→ crossed to FAR_BANK':'← returned to START_BANK';
-  addLog(`// move_${rs.moves}: ${dir}`,'info');
+  const dir=rs.side==='right'?'crossed to the far side':'returned to start';
+  addLog(`Move ${rs.moves}: ${dir}`,'info');
 
   // Conflict check on the bank just left
   const conflict=checkConflict(from,p);
-  if(conflict){addLog(`// FATAL: ${conflict} — resetting`,'err');setTimeout(doReset,1000);return;}
+  if(conflict){addLog(`${conflict} — resetting.`,'err');setTimeout(doReset,1000);return;}
 
   if(rs.right.length===p.entities.length){
-    addLog('// SUCCESS: all entities crossed','ok');
+    addLog('Everyone made it across.','ok');
     setTimeout(()=>showReveal(p),700);
     return;
   }
@@ -1249,26 +1067,26 @@ function renderRubik(p,body){
       <button class="btn-px" onclick="rkMove('B',true)">B'</button>
     </div>
     <div class="ctrl-row">
-      <button class="btn-px" onclick="renderRubik(curPuzzle,document.getElementById('puz-body'))">RESCRAMBLE()</button>
+      <button class="btn-px" onclick="renderRubik(curPuzzle,document.getElementById('puz-body'))">Rescramble</button>
     </div>
     <div class="term-log" id="tlog"></div>`;
 
   updateRubikNet();
-  addLog('// cube scrambled · 22 moves applied','info');
+  addLog('Cube scrambled.','info');
 }
 
 function rkMove(face,reverse){
   rubikMove(face,reverse);
   updateRubikNet();
   if(rubikIsSolved()){
-    addLog('// SOLVED: all six faces uniform','ok');
+    addLog('Solved.','ok');
     setTimeout(()=>showReveal(curPuzzle),900);
   }
 }
 
 function faceGrid(face){
   const colors=rubikState[face];
-  let html='<div style="display:grid;grid-template-columns:repeat(3,16px);grid-template-rows:repeat(3,16px);gap:2px;background:#000;padding:2px;border:1px solid var(--fg-dimmer)">';
+  let html='<div style="display:grid;grid-template-columns:repeat(3,16px);grid-template-rows:repeat(3,16px);gap:2px;background:#000;padding:2px;border:1px solid var(--fg-faint)">';
   colors.forEach(c=>{
     html+=`<div style="background:${RUBIK_COLORS[c]};width:16px;height:16px"></div>`;
   });
@@ -1293,7 +1111,7 @@ function updateRubikNet(){
 function renderChoice(p,body){
   body.innerHTML=`
     <div class="puz-comment">${p.comment.replace(/\n/g,'<br>')}</div>
-    <div class="puz-problem" style="font-size:11px;color:var(--fg-dimmer);margin-bottom:4px;letter-spacing:.06em;text-transform:uppercase;">// select answer</div>
+    <div class="puz-problem" style="font-size:11.5px;color:var(--fg-faint);margin-bottom:2px;letter-spacing:.04em;text-transform:uppercase;font-weight:500;">Choose an answer</div>
     <div class="choices" id="choices"></div>
     <div class="term-log" id="tlog"></div>`;
 
@@ -1313,8 +1131,8 @@ function pickChoice(idx,ok,p){
     if(i===idx)b.classList.add(ok?'ok':'no');
     if(!ok&&p.choices[i].ok)setTimeout(()=>b.classList.add('ok'),600);
   });
-  if(ok){addLog('// CORRECT: solution accepted','ok');setTimeout(()=>showReveal(p),700);}
-  else{addLog('// WRONG: correct answer highlighted','err');setTimeout(()=>showReveal(p),2000);}
+  if(ok){addLog('Correct.','ok');setTimeout(()=>showReveal(p),700);}
+  else{addLog('Not quite — correct answer highlighted.','err');setTimeout(()=>showReveal(p),2000);}
 }
 
 /* ═══════════════ REVEAL ════════════════════════════ */
@@ -1391,12 +1209,12 @@ function buildSpinner(stage){
   sp.style.cssText='width:160px;height:160px;position:relative;transition:transform 4s cubic-bezier(.1,.7,.3,1);cursor:grab';
   sp.innerHTML=`
     <svg viewBox="0 0 160 160" style="width:100%;height:100%">
-      <circle cx="80" cy="80" r="14" fill="#161b22" stroke="var(--blue)" stroke-width="2"/>
-      <circle cx="80" cy="80" r="5" fill="var(--blue)"/>
+      <circle cx="80" cy="80" r="14" fill="#161b22" stroke="var(--accent-hi)" stroke-width="2"/>
+      <circle cx="80" cy="80" r="5" fill="var(--accent-hi)"/>
       ${[0,120,240].map(a=>`
         <g transform="rotate(${a} 80 80)">
-          <ellipse cx="80" cy="32" rx="22" ry="26" fill="#1c2128" stroke="var(--blue-d)" stroke-width="1.5"/>
-          <circle cx="80" cy="32" r="9" fill="var(--orange)" opacity=".7"/>
+          <ellipse cx="80" cy="32" rx="22" ry="26" fill="#1c2128" stroke="var(--accent)" stroke-width="1.5"/>
+          <circle cx="80" cy="32" r="9" fill="var(--warn)" opacity=".7"/>
         </g>`).join('')}
     </svg>`;
   let rot=0,spinning=false;
@@ -1409,7 +1227,7 @@ function buildSpinner(stage){
   };
   wrap.appendChild(sp);
   const lbl=document.createElement('div');
-  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--fg-dimmer)';
+  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--fg-faint)';
   lbl.textContent='// tap to spin';
   wrap.appendChild(lbl);
   stage.appendChild(wrap);
@@ -1421,12 +1239,12 @@ function buildClickCube(stage){
   wrap.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:10px';
   for(let i=0;i<16;i++){
     const btn=document.createElement('div');
-    btn.style.cssText='width:38px;height:38px;background:var(--bg3);border:1px solid var(--fg-dimmer);border-radius:3px;cursor:pointer;transition:all .08s;display:flex;align-items:center;justify-content:center';
+    btn.style.cssText='width:38px;height:38px;background:var(--surface2);border:1px solid var(--fg-faint);border-radius:3px;cursor:pointer;transition:all .08s;display:flex;align-items:center;justify-content:center';
     let pressed=false;
     btn.onclick=()=>{
       pressed=!pressed;
-      btn.style.background=pressed?'rgba(121,192,255,.18)':'var(--bg3)';
-      btn.style.borderColor=pressed?'var(--blue)':'var(--fg-dimmer)';
+      btn.style.background=pressed?'rgba(121,192,255,.18)':'var(--surface2)';
+      btn.style.borderColor=pressed?'var(--accent-hi)':'var(--fg-faint)';
       btn.style.transform=pressed?'scale(.92) translateY(2px)':'scale(1)';
     };
     wrap.appendChild(btn);
@@ -1446,7 +1264,7 @@ function buildInfinityCube(stage){
     panel.onclick=()=>{
       flipped=!flipped;
       panel.style.transform=flipped?'rotateY(180deg) scale(.85)':'rotateY(0) scale(1)';
-      panel.style.background=flipped?'var(--bg3)':colors[i];
+      panel.style.background=flipped?'var(--surface2)':colors[i];
     };
     wrap.appendChild(panel);
   }
@@ -1459,7 +1277,7 @@ function buildPopit(stage){
   wrap.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:8px';
   for(let i=0;i<25;i++){
     const bub=document.createElement('div');
-    bub.style.cssText='width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(121,192,255,.5),rgba(31,111,235,.15));border:1px solid var(--blue-d);cursor:pointer;transition:all .1s';
+    bub.style.cssText='width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(121,192,255,.5),rgba(31,111,235,.15));border:1px solid var(--accent);cursor:pointer;transition:all .1s';
     let popped=false;
     bub.onclick=()=>{
       popped=!popped;
@@ -1479,10 +1297,10 @@ function buildSlider(stage){
   wrap.style.cssText='display:flex;flex-direction:column;gap:14px;width:220px';
   for(let row=0;row<4;row++){
     const track=document.createElement('div');
-    track.style.cssText='height:22px;background:var(--bg3);border:1px solid var(--fg-dimmer);border-radius:11px;position:relative;cursor:pointer';
+    track.style.cssText='height:22px;background:var(--surface2);border:1px solid var(--fg-faint);border-radius:11px;position:relative;cursor:pointer';
     const ball=document.createElement('div');
     let pos=Math.random()<.5?2:80;
-    ball.style.cssText=`width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#a5d6ff,var(--blue));position:absolute;top:1px;left:${pos}%;transition:left .25s ease`;
+    ball.style.cssText=`width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#a5d6ff,var(--accent-hi));position:absolute;top:1px;left:${pos}%;transition:left .25s ease`;
     track.appendChild(ball);
     track.onclick=()=>{
       pos=pos<40?80:2;
@@ -1498,11 +1316,11 @@ function buildSpinRing(stage){
   const wrap=document.createElement('div');
   wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:18px';
   const ring=document.createElement('div');
-  ring.style.cssText='width:140px;height:140px;border-radius:50%;border:10px solid var(--blue-d);position:relative;cursor:grab;transition:transform 3s cubic-bezier(.1,.6,.3,1)';
+  ring.style.cssText='width:140px;height:140px;border-radius:50%;border:10px solid var(--accent);position:relative;cursor:grab;transition:transform 3s cubic-bezier(.1,.6,.3,1)';
   for(let i=0;i<8;i++){
     const dot=document.createElement('div');
     const ang=i*45;
-    dot.style.cssText=`position:absolute;width:8px;height:8px;border-radius:50%;background:var(--orange);
+    dot.style.cssText=`position:absolute;width:8px;height:8px;border-radius:50%;background:var(--warn);
       top:50%;left:50%;transform:rotate(${ang}deg) translate(0,-68px) translate(-4px,-4px)`;
     ring.appendChild(dot);
   }
@@ -1516,7 +1334,7 @@ function buildSpinRing(stage){
   };
   wrap.appendChild(ring);
   const lbl=document.createElement('div');
-  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--fg-dimmer)';
+  lbl.style.cssText='font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--fg-faint)';
   lbl.textContent='// tap to spin';
   wrap.appendChild(lbl);
   stage.appendChild(wrap);
